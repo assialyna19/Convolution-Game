@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>La Quête des Lunettes Magiques</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Cinzel+Decorative:wght@700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=12">
+</head>
+<body class="accueil">
+<div id="scene">
+  <aside id="col-g" aria-label="Taille de la carte">
+    <div id="fenetres" role="group" aria-label="Taille de la carte magique">
+      <button class="fen-btn" data-n="3" aria-pressed="false" title="Petite carte (touche T pour changer)"><span class="plaque">Petite</span><div class="fen-grille"></div><small class="fen-cout"></small></button>
+      <button class="fen-btn" data-n="5" aria-pressed="false" title="Carte moyenne (touche T pour changer)"><span class="plaque">Moyenne</span><div class="fen-grille"></div><small class="fen-cout"></small></button>
+      <button class="fen-btn" data-n="7" aria-pressed="false" title="Carte suprême (touche T pour changer)"><span class="plaque">Suprême</span><div class="fen-grille"></div><small class="fen-cout"></small></button>
+    </div>
+  </aside>
+<!-- L'écran de jeu : le canvas + l'interface par-dessus -->
+<div id="cadre">
+  <canvas id="jeu" width="960" height="540"></canvas>
+  <div id="hud">
+    <div id="coeurs"></div>
+    <div id="progression" aria-label="Chemin vers le portail"><div id="trace"></div><span id="marqueur">🛡️</span><span id="but">🏰</span></div>
+    <div id="niveau">Niv. 1/5</div>
+    <div id="chrono">0:00</div>
+    <div id="pieces" aria-label="Pièces et trésors">🪙 0</div>
+  </div>
+  <div id="bulle" role="status"></div>
+  <div id="bandeau" role="status"></div>
+  <div id="btns-jeu">
+    <button class="btn-rond" id="btn-son" aria-label="Activer ou couper le son" title="Son (touche M)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="hp" d="M4 9.5v5h3.8L13 18.6V5.4L7.8 9.5z"/><path class="ondes" d="M16 9a4.2 4.2 0 010 6M18.6 6.4a8 8 0 010 11.2"/><path class="barre" d="M16.2 9.4l5 5.2M21.2 9.4l-5 5.2"/></svg></button>
+    <button class="btn-rond" id="btn-pause" aria-label="Pause" title="Pause (touche Échap ou P)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.2" y="5" width="4" height="14" rx="1.2"/><rect x="13.8" y="5" width="4" height="14" rx="1.2"/></svg></button>
+    <button class="btn-rond" id="btn-quitter" aria-label="Quitter la partie" title="Quitter la partie"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="croix" d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+  </div>
+  <div id="tuto" role="status"><span id="tuto-num"></span><p id="tuto-texte"></p><button class="lab-btn" id="tuto-passer">Passer le guide</button></div>
+  <div id="ecran" role="dialog" aria-label="Fin de niveau"><div class="ecran-carte"><h2 id="ecran-titre"></h2><p id="ecran-etoiles"></p><p id="ecran-texte"></p>
+    <div class="ecran-boutons"><button class="lab-btn" id="ecran-accueil">Accueil</button><button class="lab-btn" id="ecran-rejouer">↺ Rejouer</button><button class="lab-btn" id="ecran-suivant">Niveau suivant ▶</button></div></div></div>
+
+  <!-- L'accueil : le triangle vert pour jouer, puis de petits boutons en colonne -->
+  <div id="accueil" class="ouvert">
+    <div class="hk-fond" aria-hidden="true">
+      <svg class="hk-mandala m1" viewBox="0 0 200 200"><g fill="none" stroke="currentColor"><circle cx="100" cy="100" r="96" stroke-width="1.2"/><circle cx="100" cy="100" r="78" stroke-width=".8" stroke-dasharray="2 5"/><circle cx="100" cy="100" r="58" stroke-width="1.4"/><circle cx="100" cy="100" r="36" stroke-width=".8" stroke-dasharray="1 4"/><circle cx="100" cy="100" r="14" stroke-width="1.2"/></g></svg>
+      <svg class="hk-mandala m2" viewBox="0 0 200 200"><g fill="none" stroke="currentColor"><circle cx="100" cy="100" r="96" stroke-width="1.4"/><circle cx="100" cy="100" r="84" stroke-width=".8" stroke-dasharray="3 4"/><circle cx="100" cy="100" r="64" stroke-width="1.2"/><circle cx="100" cy="100" r="40" stroke-width="2" stroke-dasharray="1 6"/></g></svg>
+      <svg class="hk-mandala m3" viewBox="0 0 200 200"><g fill="none" stroke="currentColor"><circle cx="100" cy="100" r="96" stroke-width="1"/><circle cx="100" cy="100" r="70" stroke-width="1.6"/><circle cx="100" cy="100" r="46" stroke-width=".8" stroke-dasharray="2 3"/></g></svg>
+      <i class="bokeh b1"></i><i class="bokeh b2"></i><i class="bokeh b3"></i><i class="bokeh b4"></i><i class="bokeh b5"></i><i class="bokeh b6"></i><i class="bokeh b7"></i>
+    </div>
+    <div class="accueil-contenu">
+      <div class="accueil-titre">
+        <small>Aide le prince à sauver la princesse</small>
+        <svg class="orn haut" viewBox="0 0 420 26" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M8 13H150C162 13 168 6 180 6C190 6 192 13 200 13"/><path d="M412 13H270C258 13 252 6 240 6C230 6 228 13 220 13"/>
+          <path d="M60 13c-8-9 4-12 8-6s-6 8-8 3"/><path d="M360 13c8-9-4-12-8-6s6 8 8 3"/>
+          <path d="M120 13c0 7 10 8 12 2"/><path d="M300 13c0 7-10 8-12 2"/></g>
+          <path d="M210 3l9 10-9 10-9-10z" fill="currentColor"/><circle cx="188" cy="13" r="2" fill="currentColor"/><circle cx="232" cy="13" r="2" fill="currentColor"/></svg>
+        <h1>La Quête des<br>Lunettes Magiques</h1>
+        <svg class="orn bas" viewBox="0 0 420 26" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M8 13H150C162 13 168 6 180 6C190 6 192 13 200 13"/><path d="M412 13H270C258 13 252 6 240 6C230 6 228 13 220 13"/>
+          <path d="M60 13c-8-9 4-12 8-6s-6 8-8 3"/><path d="M360 13c8-9-4-12-8-6s6 8 8 3"/>
+          <path d="M120 13c0 7 10 8 12 2"/><path d="M300 13c0 7-10 8-12 2"/></g>
+          <path d="M210 3l9 10-9 10-9-10z" fill="currentColor"/><circle cx="188" cy="13" r="2" fill="currentColor"/><circle cx="232" cy="13" r="2" fill="currentColor"/></svg>
+      </div>
+      <nav class="hk-menu" aria-label="Menu">
+        <button class="hk-item" id="btn-reprendre" hidden>Reprendre</button>
+        <button class="hk-item" id="btn-jouer">Jouer</button>
+        <button class="hk-item" id="btn-nouvelle" hidden>Nouvelle partie</button>
+        <button class="hk-item" id="btn-niveaux">Niveaux</button>
+        <button class="hk-item" id="btn-entrainement">Entraînement</button>
+        <button class="hk-item" id="btn-histoire">L'histoire</button>
+        <button class="hk-item" id="btn-comment">Aide</button>
+        <button class="hk-item" id="btn-bilan">Bilan</button>
+      </nav>
+    </div>
+  </div>
+  <div id="niveaux-ecran" role="dialog" aria-label="Choix du niveau"></div>
+    <!-- L'aide : les règles du jeu expliquées simplement -->
+  <div id="aide" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
+    <div class="aide-carte">
+      <button class="fermer" id="aide-fermer" aria-label="Fermer l'aide" title="Fermer">✕</button>
+      <h2 id="aide-titre">Comment jouer ?</h2>
+      <p class="aide-but">🎯 <b>Le but :</b> traverser 5 mondes pour sauver la princesse. Pour avancer, il faut franchir des pièges avec des <b>filtres magiques</b>.</p>
+      <ol class="aide-etapes">
+        <li><b>👓 Mets tes lunettes</b> (touche L) : tu vois le piège comme une grille de petits carrés.</li>
+        <li><b>🃏 Choisis la taille de ta carte</b> (colonne de gauche) : <b>petite</b>, <b>moyenne</b> ou <b>suprême</b>. C'est elle qui va glisser sur les carrés.</li>
+        <li><b>✨ Choisis ton filtre</b> (colonne de droite) : chaque filtre a son pouvoir, lis l'encadré INFO !</li>
+        <li><b>Appuie sur E</b> : le filtre glisse <b>doucement</b>, carré par carré. Puis le chevalier avance tout seul dans le passage !</li>
+      </ol>
+      <p class="aide-danger">💔 <b>Attention :</b> si tu choisis la mauvaise taille de carte ou le mauvais filtre, le chevalier avance quand même… et il perd une vie ! Réfléchis bien avant d'appuyer sur E.</p>
+      <div class="aide-regles">
+        <div>🌫️ <b>Brume</b><br>elle mélange les couleurs voisines</div>
+        <div>🌿 <b>Faucille</b><br>elle coupe ce qui est plus fin que ta carte</div>
+        <div>🧱 <b>Mortier</b><br>il bouche les trous plus petits que ta carte</div>
+        <div>🌀 <b>Berceuse</b><br>elle calme ce qui s'agite, comme une tornade</div>
+        <div>🔎 <b>Lynx</b><br>il fait ressortir les détails cachés dans le brouillard</div>
+        <div>✏️ <b>Fusain</b><br>il dessine seulement les bords : il révèle les portes secrètes</div>
+      </div>
+      <p>🎓 <b>Pas sûr ?</b> Va dans <b>Entraînement</b> (au menu) : tu peux te tromper autant que tu veux, sans perdre de vie.</p>
+    </div>
+  </div>
+
+  <!-- Le bilan d'apprentissage : ce que l'enfant a compris -->
+  <div id="bilan" role="dialog" aria-modal="true" aria-labelledby="bilan-titre">
+    <div class="aide-carte">
+      <button class="fermer" id="bilan-fermer" aria-label="Fermer le bilan" title="Fermer">✕</button>
+      <h2 id="bilan-titre">Bilan d'apprentissage</h2>
+      <div id="bilan-corps"></div>
+      <div class="aide-bas"><button class="btn-petit" id="bilan-csv">⬇ Exporter (CSV)</button> <button class="btn-petit" id="bilan-effacer">🗑 Effacer</button></div>
+    </div>
+  </div>
+
+  <!-- La boîte de confirmation « Quitter ? » (décor féerique : coins dorés, lune, étincelles) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="coin-fee" viewBox="0 0 40 40"><g fill="none" stroke="#f2c55a" stroke-width="1.8" stroke-linecap="round"><path d="M3 37V17C3 9 9 3 17 3H37"/><path d="M8.5 31V19.5C8.5 13.5 13 9 19 9H31" stroke-width="1.2" opacity=".8"/><path d="M13.5 13.5c4-4 10-2 8 3.2-2 4-8 3-7-1"/></g><g fill="#ffe9a0"><circle cx="3.6" cy="36.4" r="2.2"/><circle cx="36.4" cy="3.6" r="2.2"/><path d="M13 27l1.1 2.4 2.4 1.1-2.4 1.1L13 34l-1.1-2.4L9.5 30.5l2.4-1.1z" transform="translate(2 -2) scale(.9)"/></g></symbol></defs></svg>
+  <div id="confirmer" role="alertdialog" aria-modal="true" aria-labelledby="confirmer-titre">
+    <div class="confirm-carte"><div class="confirm-inner">
+      <svg class="coin c1" aria-hidden="true"><use href="#coin-fee"/></svg><svg class="coin c2" aria-hidden="true"><use href="#coin-fee"/></svg>
+      <svg class="coin c3" aria-hidden="true"><use href="#coin-fee"/></svg><svg class="coin c4" aria-hidden="true"><use href="#coin-fee"/></svg>
+      <svg class="confirm-lune" viewBox="0 0 64 48" aria-hidden="true"><path d="M30 5A19 19 0 1 0 30 43A23 23 0 0 1 30 5z" fill="#f6d27a" stroke="#b8821e" stroke-width="1.2"/><g fill="#fff4b0"><path d="M46 10l1.4 3.6 3.6 1.4-3.6 1.4L46 20l-1.4-3.6L41 15l3.6-1.4z"/><path d="M54 26l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z"/><path d="M40 33l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9z"/></g></svg>
+      <h2 id="confirmer-titre">Voulez-vous vraiment quitter la partie ?</h2>
+      <p>Ta partie en cours sera perdue (les niveaux débloqués sont gardés).</p>
+      <div class="confirm-btns"><button class="btn-petit vert" id="confirmer-non">Non</button><button class="btn-petit rose" id="confirmer-oui">Oui</button></div>
+      <i class="etincelle" style="left:16%;top:30%;animation-delay:.1s">✦</i><i class="etincelle" style="left:82%;top:34%;animation-delay:.9s">✦</i><i class="etincelle" style="left:28%;top:78%;animation-delay:1.5s">✦</i>
+      <i class="etincelle" style="left:70%;top:74%;animation-delay:.5s">✦</i><i class="etincelle" style="left:9%;top:55%;animation-delay:1.9s">✧</i><i class="etincelle" style="left:90%;top:58%;animation-delay:1.2s">✧</i>
+    </div></div>
+  </div>
+  <!-- L'histoire d'introduction -->
+  <div id="intro" role="dialog" aria-label="L'histoire">
+    <div class="intro-carte">
+      <button class="fermer" id="intro-fermer" aria-label="Fermer l'histoire et revenir à l'accueil" title="Revenir à l'accueil">✕</button>
+      <canvas id="intro-canvas" width="520" height="150"></canvas>
+      <h2 id="intro-titre"></h2><p id="intro-texte"></p>
+      <div class="intro-bas"><span id="intro-points"></span><button class="btn-petit vert" id="intro-suivant">Suivant ▶</button></div>
+    </div>
+  </div>
+</div>
+  <!-- Le message après un filtre : une seule ligne, sous l'écran de jeu (hors du cadre) -->
+  <div id="explication" role="status" title="Clique pour fermer"></div>
+  <aside id="col-d" aria-label="Filtres">
+    <button class="carte c-lunettes outil" data-outil="lunettes" aria-pressed="false" aria-label="Lunettes magiques"><kbd>L</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><defs><radialGradient id="gLn" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#f2feff"/><stop offset=".45" stop-color="#7fe8ff" stop-opacity=".9"/><stop offset="1" stop-color="#136a8a" stop-opacity=".95"/></radialGradient></defs>
+<path d="M13 32 L3 25 M87 32 L97 25" stroke="#f2b84b" stroke-width="3.4" stroke-linecap="round"/>
+<path d="M46 33 q4-6 8 0" stroke="#f2b84b" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+<circle cx="30" cy="35" r="17" fill="url(#gLn)" stroke="#f2b84b" stroke-width="4"/><circle cx="70" cy="35" r="17" fill="url(#gLn)" stroke="#f2b84b" stroke-width="4"/>
+<path d="M21 29 q5-8 13-6 M61 29 q5-8 13-6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".9"/>
+<path d="M88 6 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#fff4b0"/><path d="M12 8 l1.4 3.4 3.4 1.4 -3.4 1.4 -1.4 3.4 -1.4 -3.4 -3.4 -1.4 3.4 -1.4z" fill="#bff6ff"/></svg><b></b><span class="carte-desc"></span></button>
+    <span class="carte-sep"></span>
+    <button class="carte c-flou outil" data-outil="flou" aria-pressed="false" aria-label="Filtre flou"><kbd>1</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><defs><radialGradient id="gFl" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#d8c6ff"/><stop offset="1" stop-color="#8a7ad8"/></radialGradient></defs>
+<g stroke="#0d0a22" stroke-width="1.5"><rect x="6" y="10" width="14" height="14" fill="#ffd166"/><rect x="20" y="10" width="14" height="14" fill="#7a5ad8"/><rect x="34" y="10" width="14" height="14" fill="#ffd166"/>
+<rect x="6" y="24" width="14" height="14" fill="#7a5ad8"/><rect x="20" y="24" width="14" height="14" fill="#ff8aa8"/><rect x="34" y="24" width="14" height="14" fill="#7a5ad8"/>
+<rect x="6" y="38" width="14" height="14" fill="#ffd166"/><rect x="20" y="38" width="14" height="14" fill="#7a5ad8"/><rect x="34" y="38" width="14" height="14" fill="#ffd166"/></g>
+<rect x="18.5" y="22.5" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.4" rx="2"/>
+<path d="M54 31 h14 m-5 -6 l6 6 -6 6" stroke="#fff4dc" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="84" cy="31" r="14" fill="url(#gFl)"/><circle cx="84" cy="31" r="14" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2"/></svg><b></b><span class="carte-desc"></span></button>
+    <button class="carte c-ouverture outil" data-outil="ouverture" aria-pressed="false" aria-label="Filtre ouverture"><kbd>2</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><defs><radialGradient id="gOu" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#b8f07a"/><stop offset="1" stop-color="#2a7a2a"/></radialGradient></defs>
+<g stroke="#6a4a2a" stroke-width="2" stroke-linecap="round"><path d="M12 54 V38 M22 54 V36 M32 54 V38 M42 54 V36"/></g>
+<ellipse cx="27" cy="24" rx="23" ry="14" fill="url(#gOu)" stroke="#16401a" stroke-width="2"/>
+<path d="M56 30 h12 m-5 -6 l6 6 -6 6" stroke="#fff4dc" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="82" cy="24" rx="16" ry="14" fill="url(#gOu)" stroke="#16401a" stroke-width="2"/>
+<path d="M70 52 q6 -6 12 0 q6 -6 12 0" stroke="#ffd166" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M70 55 l24 0" stroke="#8a5a2a" stroke-width="3" stroke-linecap="round"/></svg><b></b><span class="carte-desc"></span></button>
+    <button class="carte c-fermeture outil" data-outil="fermeture" aria-pressed="false" aria-label="Filtre fermeture"><kbd>3</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><defs><linearGradient id="gFe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a5a"/><stop offset="1" stop-color="#b8441a"/></linearGradient></defs>
+<rect x="4" y="22" width="18" height="28" fill="#8a6a44"/><rect x="38" y="22" width="18" height="28" fill="#8a6a44"/><rect x="22" y="30" width="16" height="22" fill="#0a0612"/>
+<path d="M4 22 h18 M38 22 h18" stroke="#4fae55" stroke-width="5"/>
+<path d="M60 36 h10 m-4 -6 l6 6 -6 6" stroke="#fff4dc" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<g stroke="#2a1208" stroke-width="1.5"><rect x="76" y="26" width="10" height="8" fill="url(#gFe)"/><rect x="86" y="26" width="10" height="8" fill="url(#gFe)"/><rect x="71" y="34" width="10" height="8" fill="url(#gFe)"/><rect x="81" y="34" width="10" height="8" fill="url(#gFe)"/><rect x="76" y="42" width="10" height="8" fill="url(#gFe)"/><rect x="86" y="42" width="10" height="8" fill="url(#gFe)"/></g></svg><b></b><span class="carte-desc"></span></button>
+    <button class="carte c-gaussien outil" data-outil="gaussien" aria-pressed="false" aria-label="Filtre Gaussien" hidden><kbd>4</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><g fill="none" stroke-linecap="round"><path d="M18 14 h64" stroke="#8ff0f0" stroke-width="5"/><path d="M26 25 h48" stroke="#6fe0e0" stroke-width="5" opacity=".85"/><path d="M34 36 h32" stroke="#4fcfcf" stroke-width="5" opacity=".75"/><path d="M42 47 h16" stroke="#2fb8b8" stroke-width="5" opacity=".65"/></g></svg><b></b><span class="carte-desc"></span></button>
+    <button class="carte c-nettete outil" data-outil="nettete" aria-pressed="false" aria-label="Filtre Netteté" hidden><kbd>5</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><g><path d="M50 8 L58 26 L78 30 L58 34 L50 52 L42 34 L22 30 L42 26 Z" fill="#ffe08a" stroke="#8a6a1a" stroke-width="2" stroke-linejoin="round"/><circle cx="50" cy="30" r="5" fill="#fff8d8"/></g></svg><b></b><span class="carte-desc"></span></button>
+    <button class="carte c-contours outil" data-outil="contours" aria-pressed="false" aria-label="Filtre Contours" hidden><kbd>6</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="10" width="48" height="40" stroke="#ffa0d0" stroke-width="4" stroke-dasharray="7 5"/><path d="M26 50 V24 Q50 4 74 24 V50" stroke="#fff0f8" stroke-width="3"/></g></svg><b></b><span class="carte-desc"></span></button>
+    <button class="carte c-vapeur outil" data-outil="vapeur" aria-pressed="false" aria-label="Pistolet à vapeur"><kbd>7</kbd><svg class="carte-art" viewBox="0 0 100 60" aria-hidden="true"><defs><linearGradient id="gVa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a0"/><stop offset=".5" stop-color="#d9a73a"/><stop offset="1" stop-color="#7a5418"/></linearGradient><radialGradient id="gVp" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#bfe4f6" stop-opacity=".85"/></radialGradient></defs>
+<path d="M8 30 h38 l4 -6 h6 v14 h-6 l-4 -2 h-8 l-3 14 h-9 l3 -14 h-21z" fill="url(#gVa)" stroke="#3a2610" stroke-width="2" stroke-linejoin="round"/>
+<ellipse cx="24" cy="24" rx="10" ry="6.5" fill="#7d9ab8" stroke="#2a3348" stroke-width="2"/><circle cx="46" cy="30" r="2.2" fill="#fff4b0"/>
+<g fill="url(#gVp)"><circle cx="68" cy="30" r="6"/><circle cx="77" cy="26" r="8"/><circle cx="88" cy="30" r="9"/><circle cx="82" cy="39" r="6"/></g></svg><b></b><span class="carte-desc"></span></button>
+    <button class="btn-petit" id="btn-aide" aria-label="Aide" title="Aide : comment jouer ?">❓ Aide</button>
+  </aside>
+</div>
+
+<div id="commandes">
+  <button data-k="gauche" aria-label="Aller à gauche">◀</button>
+  <button data-k="droite" aria-label="Aller à droite">▶</button>
+  <button data-k="bas" aria-label="S'accroupir">▼</button>
+  <button data-k="action" aria-label="Lancer le filtre">✨</button>
+  <button data-k="saut" aria-label="Sauter">▲</button>
+</div>
+
+<!-- Le jeu : tout le code est dans ces fichiers (jeu.js doit être chargé en dernier) -->
+<script>
+/* Filet de sécurité : si un fichier manque (ou s'il y a une erreur), on l'écrit en rouge en bas de l'écran au lieu de montrer un écran vide. */
+(function () {
+  function montrer(msg) {
+    let d = document.getElementById('erreur-js');
+    if (!d) { d = document.createElement('div'); d.id = 'erreur-js'; d.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#8a1226;color:#fff;font:600 15px system-ui,sans-serif;padding:10px 16px;white-space:pre-wrap'; document.body.appendChild(d); }
+    d.textContent += msg + '\n';
+  }
+  addEventListener('error', function (e) {
+    if (e.target && e.target.tagName === 'SCRIPT') montrer('❌ Fichier introuvable : ' + e.target.getAttribute('src') + '  (copie-le dans le même dossier que index.html)');
+    else if (e.message) montrer('❌ Erreur : ' + e.message + '  [' + String(e.filename || '').split('/').pop().split('?')[0] + ' ligne ' + e.lineno + ']  → un fichier est peut-être ancien : remplace TOUS les fichiers du dossier, puis Ctrl+F5');
+  }, true);
+})();
+</script>
+<script src="convolution.js?v=12"></script>
+<script src="filtres.js?v=12"></script>
+<script src="son.js?v=12"></script>
+<script src="niveaux.js?v=12"></script>
+<script src="stats.js?v=12"></script>
+<script src="accueil.js?v=12"></script>
+<script src="intro.js?v=12"></script>
+<script src="tuto.js?v=12"></script>
+<script src="princesse.js?v=12"></script>
+<script src="pieges.js?v=12"></script>
+<script src="pieges2.js?v=12"></script>
+<script src="matrices.js?v=13"></script>
+<script src="monde.js?v=12"></script>
+<script src="humains.js?v=12"></script>
+<script src="decor.js?v=12"></script>
+<script src="prince.js?v=12"></script>
+<script src="jeu.js?v=12"></script>
+</body>
+</html>

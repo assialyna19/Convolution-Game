@@ -1,0 +1,4 @@
+Dépose ici l'image de ton personnage sous le nom : heros.png
+- Format PNG, fond TRANSPARENT, environ 200 à 400 px de haut.
+- Une seule pose : images: 1 dans jeu.js (SPRITE).
+- Plusieurs poses côte à côte (même taille chacune) : mets le nombre dans images.

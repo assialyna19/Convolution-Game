@@ -1,0 +1,36 @@
+/* =====================================================
+   L'AIDE EN MINI-TUTORIEL : Règles | A Matrices | B Filtres | C Taille. Tous les exemples sont calculés par le vrai moteur (convolution.js).
+   ===================================================== */
+(function () {
+  const carte = document.querySelector('#aide .aide-carte'), titre = document.getElementById('aide-titre'); if (!carte) return;
+  const IMG = [0,0,0,0,0,0,0,0, 0,1,1,1,0,0,1,0, 0,1,0,1,0,0,0,0, 0,1,1,1,0,0,0,0, 0,0,0,0,0,0,0,0], W8 = 8, H5 = 5;     // un carré creux (trou) + un petit point isolé
+  const regles = document.createElement('div'), nav = document.createElement('div'), pane = document.createElement('div');
+  [...carte.children].forEach(e => { if (e !== titre && e.id !== 'aide-fermer') regles.appendChild(e); });
+  carte.append(nav, regles, pane); nav.className = 'aide-bas';
+  const fm = v => Number.isInteger(v) ? v : (+v.toFixed(2)).toString().replace(/^0\./, '.');
+  const tab = (g, w, hl, vide) => `<table class="mx">${Array.from({ length: g.length / w }, (_, r) => '<tr>' + Array.from({ length: w }, (_, c) => { const i = r * w + c, v = g[i], k = v == null ? 0 : Math.max(0, Math.min(1, v));
+    return `<td style="background:${v == null ? '#1a1438' : `rgb(${27 + 216 * k | 0},${18 + 212 * k | 0},${51 + 129 * k | 0})`};color:${k > .5 ? '#1b1233' : '#fff'};${hl && hl(c, r) ? 'outline:3px solid #ffd166;outline-offset:-3px' : ''}">${v == null ? '·' : fm(v)}</td>`; }).join('') + '</tr>').join('')}</table>`;
+  const chaine = (k, g, w, h, n) => FILTRES[k].reduce((e, op) => balayer(e, w, h, tailleDe(op, n), op), g);
+  let ong = 'regles', k = 0, fiche = 'erosion';
+  const USAGE = { erosion: ['Rétrécir : fait disparaître les tiges fines (buisson).', "Un trou grandit : ne bouche rien."], dilatation: ['Agrandir : bouche un petit trou.', 'Elle gonfle aussi ce qu’il faut garder.'], ouverture: ['Buisson : supprime les petits éléments isolés.', 'Trop grande, elle efface aussi la forme principale.'], fermeture: ['Trou : comble les petits trous et relie les parties proches.', 'Ne retire pas les petits éléments isolés.'], flou: ['Sable : mélange les voisins.', 'Il étale les détails.'], gaussien: ['Tornade : calme sans trop étaler.', 'Trop grande, tout devient flou.'], nettete: ['Brouillard : fait ressortir les détails.', 'Elle renforce aussi le bruit.'], contours: ['Mur : ne garde que les bords.', 'Inutile sur une zone uniforme.'] };
+  const MORPHO = ['erosion', 'dilatation', 'ouverture', 'fermeture'];
+  function A() { const c = k % W8, r = Math.floor(k / W8), v = voisinsDe(IMG, W8, H5, c, r, 3), S = v.reduce((a, b) => a + b, 0), out = balayer(IMG, W8, H5, 3, 'minimum');
+    return `<p>🔢 Une image est une <b>grille de nombres</b> : <b>1</b> = plein, <b>0</b> = vide. Un <b>filtre</b> est une petite grille (ici 3×3) qui glisse case par case.</p><p>Érosion : on garde 1 seulement si <b>toutes</b> les cases sous le filtre valent 1.</p><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${tab(IMG, W8, (x, y) => Math.abs(x - c) <= 1 && Math.abs(y - r) <= 1)}${tab(Array(9).fill(1), 3)}${tab(out.map((x, i) => i < k ? x : null), W8)}</div><p><b>Entrée → Filtre → Résultat</b> · somme = ${S} sur 9 → ${S === 9 ? '1 (tout plein)' : '0 (il y a du vide)'}</p><button class="btn-petit" id="a-pas">Pas suivant ▶</button> <button class="btn-petit" id="a-raz">↺ Rejouer</button><p>📏 Plus le filtre est grand, plus il regarde de cases à la fois (3×3 = 9 cases, 5×5 = 25 cases).</p>`; }
+  function B() { const F = FILTRES_JEU[fiche], op = FILTRES[fiche][0], KW = noyauAffiche(op, 3), ap = chaine(fiche, IMG, W8, H5, 3), m = MORPHO.includes(fiche);
+    return `<div>${[...MORPHO, 'flou', 'gaussien', 'nettete', 'contours'].map(f => `<button class="btn-petit" data-f="${f}" aria-pressed="${f === fiche}">${FILTRES_JEU[f].icone} ${FILTRES_JEU[f].nom}</button>`).join(' ')}</div><h3>${F.icone} ${F.nom}</h3><p>${F.info}</p><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${tab(IMG, W8)}${tab(KW, 3)}${tab(ap, W8)}</div><p>Avant · ${m ? 'élément structurant 3×3' : 'filtre 3×3 (poids)'} · Après</p><p>✅ ${USAGE[fiche][0]}<br>⚠️ ${USAGE[fiche][1]}</p><p>${m ? 'Opération de <b>morphologie</b> : on compare les cases (tout plein ? au moins un plein ?).' + (fiche === 'ouverture' ? ' Ouverture = érosion puis dilatation.' : fiche === 'fermeture' ? ' Fermeture = dilatation puis érosion.' : '') : 'Vraie <b>convolution</b> : chaque case × son poids, puis on additionne.'}</p>`; }
+  function C() { const ro = 8, co = 11, V = Array(co * ro).fill(0), tg = []; for (let y = 1; y <= 3; y++) for (let x = 2; x <= 8; x++) V[y * co + x] = 1; [2, 4, 6, 8].forEach(x => [4, 5].forEach(y => { V[y * co + x] = 1; tg.push(y * co + x); }));
+    const T0 = Array(10 * 4).fill(0); for (let x = 0; x < 10; x++) T0[30 + x] = (x >= 3 && x < 7) ? 0 : 1;      // trou de 4 cases
+    const ligne = (n, g, w, h, f, txt) => `<div>${tab(chaine(f, g, w, h, n), w)}<br>${n}×${n} ${txt}</div>`;
+    const tr = [3, 5].map(n => { const o = chaine('fermeture', T0, 10, 4, n); return ligne(n, T0, 10, 4, 'fermeture', o.slice(30).every(v => v === 1) ? '✅ bouché' : '❌ trou restant'); }).join('');
+    const bu = [3, 5, 7].map(n => { const o = chaine('ouverture', V, co, ro, n); return `<div>${tab(o, co)}<br>${n}×${n} : tiges ${tg.filter(i => o[i]).length}/${tg.length}, voûte ${o.filter((v, i) => v && !tg.includes(i)).length}/${V.filter((v, i) => v && !tg.includes(i)).length}</div>`; }).join('');
+    return `<p><b>Trou de 4 cases + Fermeture</b> : même piège, deux tailles.</p><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${tr}</div><p><b>Buisson + Ouverture</b> : trop petit = tiges restantes ; trop grand = la voûte disparaît aussi.</p><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${bu}</div><p>⚠️ Ce n'est pas une règle universelle : le résultat dépend de l'opération, de la forme du filtre et de la grille.</p>`; }
+  const TITRES = { regles: 'Règles', A: 'A · Matrices', B: 'B · Filtres', C: 'C · Taille' };
+  function rendre() { nav.innerHTML = Object.keys(TITRES).map(t => `<button class="btn-petit" data-t="${t}" aria-pressed="${t === ong}">${TITRES[t]}</button>`).join(' '); regles.hidden = ong !== 'regles';
+    pane.innerHTML = ong === 'A' ? A() : ong === 'B' ? B() : ong === 'C' ? C() : '';
+    nav.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { ong = b.dataset.t; rendre(); });
+    pane.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { fiche = b.dataset.f; rendre(); });
+    const p = pane.querySelector('#a-pas'), r = pane.querySelector('#a-raz'); if (p) p.onclick = () => { k = (k + 1) % (W8 * H5); rendre(); }; if (r) r.onclick = () => { k = 0; rendre(); }; }
+  setInterval(() => { if (aideOuvert && !enigmeOuverte && ong === 'A') { k = (k + 1) % (W8 * H5); rendre(); } }, 800);      // la démonstration avance toute seule
+  const st = document.createElement('style'); st.textContent = ".mx{border-collapse:collapse;display:inline-block;margin:4px}.mx td{width:26px;height:26px;text-align:center;font:600 13px system-ui;border:1px solid #0d0a22}@media(max-width:600px){.mx td{width:20px;height:20px;font-size:11px}}"; document.head.appendChild(st);
+  rendre();
+})();

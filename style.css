@@ -1,0 +1,510 @@
+/* =====================================================
+   STYLE DU JEU (étapes 1 à 4)
+   Les tailles en "cqw" = pourcentage de la largeur du jeu (#cadre) : l'interface s'adapte à l'écran.
+   ===================================================== */
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0614 radial-gradient(ellipse at 50% 25%, #2b1655 0%, #170b33 50%, #09040f 100%) fixed; }
+body { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* #cadre contient le canvas + l'interface ; sa taille est fixée par jeu.js (fonction redimensionner) */
+#cadre { position: relative; container-type: inline-size; border-radius: 24px; overflow: hidden;
+         box-shadow: 0 0 0 3px rgba(201,151,46,.6), 0 0 0 7px rgba(20,8,40,.9), 0 12px 40px rgba(0,0,0,.7); }
+canvas { width: 100%; height: 100%; display: block; border-radius: inherit; }
+
+/* Boutons tactiles : visibles seulement sur tablette / téléphone */
+#commandes { display: none; position: fixed; bottom: calc(var(--bas, 0px) + 12px); left: 0; right: 0; padding: 0 18px; gap: 14px; pointer-events: none; }
+#commandes button { pointer-events: auto; width: 68px; height: 68px; border-radius: 50%; font-size: 26px; color: #ffe9c7;
+        background: rgba(42,27,107,.6); border: 3px solid rgba(255,233,199,.75); touch-action: none; user-select: none; }
+#commandes button:active { background: rgba(224,85,154,.8); }
+#commandes button[data-k="action"] { margin-left: auto; }
+@media (hover: none) { #commandes { display: flex; } }
+
+/* ---------- Barre du haut : vies, progression, chrono ---------- */
+#hud { position: absolute; top: 2cqw; left: 2.5cqw; right: 17cqw; display: flex; align-items: center; gap: 2cqw;
+       pointer-events: none; font-family: 'Baloo 2', system-ui, sans-serif; color: #fff4dc; }
+#coeurs { font-size: clamp(16px, 3.2cqw, 54px); letter-spacing: .1em; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+#progression { position: relative; flex: 1; height: clamp(10px, 1.6cqw, 28px); border-radius: 99px;
+               background: rgba(42,27,107,.65); border: 2px solid rgba(255,233,199,.7); }
+#trace { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #2ec4b6, #ffd166, #ff7ab6); }
+#marqueur, #but { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); font-size: clamp(16px, 3cqw, 50px); }
+#but { left: 100%; }
+#pieces { white-space: nowrap; text-align: center; padding: .1em .7em; border-radius: 99px; background: rgba(42,27,107,.65); border: 2px solid #f2c14e; color: #ffe9a0; font: 700 clamp(13px, 2cqw, 30px)/1.3 'Baloo 2', system-ui, sans-serif; }
+#pieces[hidden] { display: none; }
+#chrono { min-width: 4.5ch; text-align: center; padding: .1em .6em; border-radius: 99px; background: rgba(42,27,107,.65);
+          border: 2px solid rgba(255,233,199,.7); font-size: clamp(14px, 2.6cqw, 42px); }
+
+/* ---------- Bulle d'aide ---------- */
+#bulle { position: absolute; right: 2.5cqw; top: 9cqw; max-width: 30cqw; padding: .7em 1em; border-radius: 18px;
+         background: #fff4dc; color: #3a2146; font: 600 clamp(11px, 1.9cqw, 30px)/1.3 'Baloo 2', system-ui, sans-serif;
+         box-shadow: 0 4px 14px rgba(0,0,0,.35); opacity: 0; transform: translateX(8px);
+         transition: opacity .2s, transform .2s; pointer-events: none; }
+#bulle.visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .outil, #bulle { transition: none; } }
+
+/* les petits boutons des écrans (guide, fin de niveau) */
+.lab-btn { flex: 1 1 auto; padding: .35em .7em; border-radius: 99px; cursor: pointer; color: #fff4dc; font: inherit;
+           background: rgba(255,255,255,.1); border: 2px solid rgba(255,233,199,.6); }
+.lab-btn:hover { background: rgba(255,255,255,.2); }
+.lab-btn[aria-pressed="true"] { background: #e0559a; border-color: #ffd166; }
+.lab-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* =====================================================
+   ÉTAPE 6 : pastille de la taille de fenêtre (dans la barre du haut)
+   ===================================================== */
+.pilule { pointer-events: auto; cursor: pointer; padding: .1em .7em; border-radius: 99px; color: #fff4dc;
+          background: rgba(42,27,107,.65); border: 2px solid rgba(255,233,199,.7);
+          font: 600 clamp(14px, 2.6cqw, 42px)/1.3 'Baloo 2', system-ui, sans-serif; }
+.pilule:hover { background: rgba(224,85,154,.8); }
+.pilule:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* =====================================================
+   NIVEAUX : étiquette du niveau, bandeau de départ, écran de fin de niveau
+   ===================================================== */
+#niveau { text-align: center; padding: .1em .6em; border-radius: 99px; background: rgba(42,27,107,.65);
+          border: 2px solid rgba(255,233,199,.7); font-size: clamp(14px, 2.6cqw, 42px); white-space: nowrap; }
+#bandeau { position: absolute; top: 12cqw; left: 50%; transform: translateX(-50%); text-align: center; padding: .6em 1.6em; border-radius: 18px;
+           background: rgba(12,8,22,.78); color: #fff4dc; border: 2px solid rgba(255,233,199,.5); opacity: 0; transition: opacity .6s; pointer-events: none;
+           font: 600 clamp(14px, 2.8cqw, 44px)/1.3 'Baloo 2', system-ui, sans-serif; }
+#bandeau small { font-size: .65em; color: #ffd166; }
+#bandeau.visible { opacity: 1; }
+#ecran { display: none; position: absolute; inset: 0; z-index: 20; align-items: center; justify-content: center; background: rgba(5,3,12,.8); border-radius: 0; }
+#ecran.ouvert { display: flex; }
+.ecran-carte { text-align: center; padding: 2.4cqw 4cqw; border-radius: 2cqw; background: rgba(29,18,64,.96); border: 3px solid rgba(255,233,199,.6); color: #fff4dc;
+               font: 600 clamp(14px, 2.2cqw, 34px)/1.4 'Baloo 2', system-ui, sans-serif; }
+.ecran-carte h2 { margin: 0 0 .3em; font-size: 1.7em; }
+.ecran-carte p { margin: .2em 0; }
+#ecran-etoiles { font-size: 2.6em; color: #ffd166; letter-spacing: .1em; }
+.ecran-boutons { display: flex; gap: 1.2cqw; justify-content: center; margin-top: 1em; }
+
+/* =====================================================
+   LES CARTES MAGIQUES (en bas de l'écran, en ligne) : lunettes, filtres, vapeur, fenêtre, loupe
+   La barre fait 150 px de haut (BARRE_H dans jeu.js) et la même largeur que l'écran de jeu.
+   ===================================================== */
+.carte { --c1: #2a1c52; --c2: #0d0a22; --bord: #c9972e; --lueur: #ffd166;
+         position: relative; flex: 0 1 112px; min-width: 0; height: 122px; padding: 5px 4px 5px; box-sizing: border-box; cursor: pointer; color: #fff4dc; overflow: hidden;
+         display: flex; flex-direction: column; align-items: center; gap: 1px; text-align: center; border-radius: 14px; border: 2px solid var(--bord);
+         background: radial-gradient(ellipse at 50% 28%, var(--c1) 0%, var(--c2) 88%);
+         box-shadow: 0 4px 10px rgba(0,0,0,.55), inset 0 0 0 2px rgba(255,255,255,.08);
+         font: 600 13px/1.15 'Baloo 2', system-ui, sans-serif; transition: transform .15s, box-shadow .15s, filter .15s; }
+.carte::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: 12px;                      /* reflet brillant en haut à gauche */
+         background: linear-gradient(125deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 38%); }
+.carte:hover { transform: translateY(-6px); }
+.carte[aria-pressed="true"] { transform: translateY(-14px); border-color: #fff; filter: brightness(1.18) saturate(1.15);
+         box-shadow: 0 0 20px var(--lueur), 0 0 6px var(--lueur), 0 6px 12px rgba(0,0,0,.55), inset 0 0 0 2px rgba(255,255,255,.25); }
+.carte:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.carte-art { width: 94px; height: 56px; margin-top: 12px; flex: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.55)); }
+.carte b { font-size: 14px; color: var(--bord); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.carte-desc { font-size: 11px; line-height: 1.15; opacity: .9; padding: 0 2px; }
+.carte kbd { position: absolute; top: 4px; left: 5px; z-index: 1; font: 700 10px/1.5 'Baloo 2', system-ui, sans-serif; padding: 0 5px; border-radius: 6px;
+             background: rgba(0,0,0,.35); border: 1px solid var(--bord); color: #fff4dc; }
+/* une couleur et un cadre propres à chaque carte */
+.c-lunettes  { --c1: #14536b; --c2: #0a1f33; --bord: #7fe8ff; --lueur: #7fe8ff; }
+.c-flou      { --c1: #3a4a9a; --c2: #141a40; --bord: #aab8ff; --lueur: #9fb4ff; }
+.c-ouverture { --c1: #2a6a3a; --c2: #0e2a1c; --bord: #9be68f; --lueur: #8fe08a; }
+.c-fermeture { --c1: #8a4220; --c2: #2a1208; --bord: #ffb070; --lueur: #ff9a5a; }
+.c-vapeur    { --c1: #2a7a8a; --c2: #0c2a3a; --bord: #c8f0ff; --lueur: #9fe6ff; }
+.c-fenetre   { --c1: #7a5a14; --c2: #2a1c06; --bord: #ffd166; --lueur: #ffd166; }
+.c-loupe     { --c1: #6a2a8a; --c2: #200a30; --bord: #e6aaff; --lueur: #d08aff; }
+.carte-sep { align-self: stretch; height: 1px; width: 70%; margin: 2px auto; background: linear-gradient(90deg, transparent, rgba(255,233,160,.5), transparent); }
+.fen-grille { margin-top: 10px; width: 52px; height: 52px; flex: none; display: grid; grid-template-columns: repeat(7, 1fr); gap: 1.5px; padding: 3px; box-sizing: border-box;
+              border: 2px solid #ffd166; border-radius: 6px; background: rgba(0,0,0,.3); }
+.fen-grille i { background: rgba(255,233,160,.18); border-radius: 1px; transition: background .15s; }
+.fen-grille i.on { background: #ffd166; box-shadow: 0 0 4px #ffd166; }
+@media (prefers-reduced-motion: reduce) { .carte { transition: none; } }
+
+/* =====================================================
+   L'ACCUEIL : titre, boutons Jouer / Niveaux / Comment ça marche ?
+   ===================================================== */
+body.accueil #hud { visibility: hidden; }
+#accueil { display: none; position: absolute; inset: 0; z-index: 30; align-items: center; justify-content: center; text-align: center; overflow: hidden;
+           background: radial-gradient(ellipse at 50% 38%, #5a2f9c 0%, #35196a 38%, #1b0c3a 70%, #090418 100%); }
+#accueil.ouvert { display: flex; }
+.accueil-contenu { display: flex; flex-direction: column; align-items: center; gap: 2.4cqw; }
+.accueil-titre small { font: 600 clamp(11px, 1.7cqw, 26px)/1.2 'Baloo 2', system-ui, sans-serif; color: #ffd9a0; letter-spacing: .28em; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
+.accueil-titre h1 { margin: .15em 0 0; font: 700 clamp(26px, 6cqw, 86px)/1.05 'Cinzel Decorative', Georgia, serif;
+           background: linear-gradient(180deg, #fff3c0 0%, #f2b84b 55%, #a86a1c 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+           filter: drop-shadow(0 4px 8px rgba(0,0,0,.75)); }
+.menu-accueil { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1.1cqw; max-width: 84cqw; }
+.btn-play { width: 6.6cqw; height: 6.6cqw; min-width: 54px; min-height: 54px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; padding: 0;
+            border: 3px solid rgba(255,255,255,.75); background: radial-gradient(circle at 35% 28%, #8dffa6 0%, #29b956 62%, #17803a 100%);
+            box-shadow: 0 6px 16px rgba(0,0,0,.55), 0 0 18px rgba(80,230,120,.45), inset 0 2px 0 rgba(255,255,255,.4); transition: transform .12s, filter .12s; }
+.btn-play svg { width: 46%; height: 46%; fill: #fff; margin-left: 7%; filter: drop-shadow(0 2px 3px rgba(0,60,20,.6)); }
+.btn-play:hover { transform: scale(1.08); filter: brightness(1.1); }
+.btn-play:focus-visible, .btn-petit:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.btn-petit { min-width: 11cqw; padding: .22em 1.1em; border-radius: 99px; cursor: pointer; color: #fff4dc; border: 1.5px solid rgba(255,233,160,.5); background: rgba(24,12,48,.72);
+             font: 600 clamp(11px, 1.55cqw, 22px)/1.3 'Baloo 2', system-ui, sans-serif; transition: background .12s, transform .12s; }
+.btn-petit:hover { background: rgba(90,50,150,.85); transform: scale(1.04); }
+.btn-petit[hidden] { display: none; }
+.btn-petit.icone { min-width: 0; width: 3.4cqw; height: 3.4cqw; min-width: 30px; min-height: 30px; padding: 0; border-radius: 50%; font-size: clamp(13px, 1.7cqw, 24px); }
+.btn-petit.vert { background: linear-gradient(#5ee07a, #1fa64a); border-color: rgba(255,255,255,.6); color: #fff; text-shadow: 0 1px 2px rgba(0,60,20,.5); }
+.btn-petit.vert:hover { background: linear-gradient(#7af092, #29b956); }
+.fermer { position: absolute; top: .7cqw; right: .9cqw; width: 2.8cqw; height: 2.8cqw; min-width: 26px; min-height: 26px; padding: 0; border-radius: 50%; cursor: pointer; z-index: 2;
+          font: 700 clamp(12px, 1.5cqw, 20px)/1 system-ui, sans-serif; color: #fff4dc; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,233,160,.55); }
+.fermer:hover { background: rgba(224,85,154,.8); }
+#niveaux-ecran { display: none; position: absolute; inset: 0; z-index: 31; flex-direction: column; align-items: center; justify-content: center; gap: 2cqw;
+                 background: rgba(4,2,12,.92); color: #fff4dc; font: 600 clamp(12px, 1.9cqw, 30px)/1.3 'Baloo 2', system-ui, sans-serif; }
+#niveaux-ecran.ouvert { display: flex; }
+#niveaux-ecran h2 { margin: 0; font: 700 clamp(18px, 3.4cqw, 52px) 'Cinzel Decorative', Georgia, serif; color: #f2b84b; }
+.niv-grille { display: flex; gap: 1.2cqw; }
+.niv-carte { position: relative; width: 14cqw; padding: 1em .5em; border-radius: 14px; cursor: pointer; color: #fff4dc; border: 2px solid #c9972e; font: inherit;
+             background: linear-gradient(160deg, #2a1c52, #0d0a22); display: flex; flex-direction: column; align-items: center; gap: .3em; transition: transform .15s; }
+.niv-carte:hover:not(:disabled) { transform: translateY(-6px); border-color: #ffe08a; }
+.niv-carte:disabled { opacity: .45; cursor: not-allowed; }
+.niv-num { font: 700 2.2em 'Cinzel Decorative', Georgia, serif; color: #ffd166; line-height: 1; }
+.niv-carte em { font-style: normal; font-size: .8em; padding: .1em .7em; border-radius: 99px; background: rgba(255,255,255,.12); }
+.niv-carte .cadenas { position: absolute; top: 6px; right: 8px; }
+
+/* =====================================================
+   EXPLICATIONS APRÈS UN FILTRE, HISTOIRE D'INTRODUCTION, LEÇON DE FIN DE NIVEAU
+   ===================================================== */
+#explication { position: absolute; top: 9cqw; left: 2.5cqw; width: 33cqw; padding: .8cqw 1.2cqw; border-radius: 16px; cursor: pointer; z-index: 8;
+               background: rgba(18,9,38,.94); color: #fff4dc; border: 2px solid #ffd166; box-shadow: 0 6px 20px rgba(0,0,0,.6);
+               font: 600 clamp(11px, 1.55cqw, 24px)/1.3 'Baloo 2', system-ui, sans-serif; opacity: 0; pointer-events: none; transform: translateY(-8px); transition: opacity .25s, transform .25s; }
+#explication.visible { opacity: 1; pointer-events: auto; transform: none; }
+#explication h3 { margin: 0 0 .4em; font-size: 1.15em; color: #ffd166; }
+#explication p { margin: .5em 0 0; }
+.ex-ligne { display: flex; align-items: center; gap: .35cqw; margin: .25em 0; }
+.ex-ligne span { width: 9cqw; flex: none; opacity: .9; }
+.ex-case { display: inline-block; width: 1.9cqw; height: 1.9cqw; border-radius: 3px; border: 1px solid rgba(255,255,255,.35); }
+.ex-trou { background: #05040c; } .ex-fen { background: #ffd166; } .ex-tige { background: #86b84a; } .ex-voute { background: #3a7a3a; }
+.ex-g1 { background: #f0d58a; } .ex-g2 { background: #8a5a2b; } .ex-gm { background: #bb8e58; }
+#intro { display: none; position: absolute; inset: 0; z-index: 25; align-items: flex-end; justify-content: center; padding-bottom: 3cqw;
+         background: linear-gradient(180deg, rgba(4,2,12,0) 30%, rgba(4,2,12,.85)); }
+#intro.ouvert { display: flex; }
+.intro-carte { position: relative; width: 62cqw; padding: 1.6cqw 2.4cqw; border-radius: 22px; text-align: center; color: #fff4dc; background: rgba(20,10,42,.94); border: 2px solid rgba(255,233,160,.55);
+               box-shadow: 0 10px 30px rgba(0,0,0,.6); font: 600 clamp(12px, 1.9cqw, 30px)/1.4 'Baloo 2', system-ui, sans-serif; }
+.intro-carte canvas { display: none; margin: 0 auto .6em; width: 60%; height: auto; border-radius: 12px; background: rgba(255,255,255,.05); }
+.intro-carte h2 { margin: 0 0 .3em; font: 700 1.5em 'Cinzel Decorative', Georgia, serif; color: #f2b84b; }
+.intro-carte p { margin: 0; }
+.intro-bas { display: flex; align-items: center; justify-content: space-between; margin-top: .9em; }
+#intro-points { letter-spacing: .3em; color: #ffd166; }
+.intro-btns { display: flex; gap: 1cqw; align-items: center; }
+.lecon { display: block; margin-top: .6em; padding: .5em .8em; border-radius: 12px; background: rgba(255,209,102,.12); color: #ffe9a0; font-size: .85em; text-align: left; }
+
+.ex-coeur { background: #ff4a3a; }
+
+/* =====================================================
+   TUTORIEL, BOUTON DE SON, CARTE CONSEILLÉE QUI CLIGNOTE
+   ===================================================== */
+#tuto { position: absolute; top: auto; bottom: 1.2cqw; left: 50%; transform: translateX(-50%) translateY(6px); max-width: 60cqw; line-height: 1.3; z-index: 8; padding: .7cqw 1.4cqw; border-radius: 16px; text-align: center;
+        background: rgba(18,9,38,.94); color: #fff4dc; border: 2px solid #7fe8ff; box-shadow: 0 6px 20px rgba(0,0,0,.6), 0 0 14px rgba(127,232,255,.35);
+        font: 600 clamp(12px, 1.8cqw, 28px)/1.35 'Baloo 2', system-ui, sans-serif; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+#tuto.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%); }
+#tuto span { display: block; font-size: .7em; color: #7fe8ff; letter-spacing: .12em; text-transform: uppercase; }
+#tuto p { margin: .2em 0 .5em; }
+#tuto .lab-btn { font-size: .7em; padding: .1em .8em; opacity: .85; }
+body.accueil #tuto { display: none; }
+.carte.conseil { animation: conseil .9s ease-in-out infinite alternate; }
+@keyframes conseil { from { transform: translateY(-4px); box-shadow: 0 0 6px #fff, 0 0 12px var(--lueur); } to { transform: translateY(-16px); box-shadow: 0 0 20px #fff, 0 0 34px var(--lueur); } }
+@media (prefers-reduced-motion: reduce) { .carte.conseil { animation: none; transform: translateY(-12px); box-shadow: 0 0 20px #fff, 0 0 30px var(--lueur); } }
+
+/* =====================================================
+   PAUSE / QUITTER, CARTE DES NIVEAUX SUR UN CHEMIN, PETITES CROIX
+   ===================================================== */
+.carte[hidden] { display: none; }
+body.accueil #niveaux-ecran { gap: 1cqw; }
+.carte-chemin { position: relative; width: 82cqw; height: 31cqw; margin-top: 1cqw; }
+.chemin-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.chemin-base { fill: none; stroke: rgba(10,4,24,.9); stroke-width: 22; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.chemin-trait { fill: none; stroke: rgba(255,233,160,.5); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 2 12; vector-effect: non-scaling-stroke; }
+.chemin-trait.fait { stroke: #ffd166; stroke-dasharray: none; stroke-width: 5; filter: drop-shadow(0 0 5px rgba(255,209,102,.8)); }
+.noeud { position: absolute; transform: translate(-50%, -50%); width: 6.4cqw; height: 6.4cqw; min-width: 44px; min-height: 44px; border-radius: 50%; cursor: pointer; padding: 0; color: #fff;
+         border: 3px solid rgba(255,255,255,.75); display: grid; place-items: center; font: 700 clamp(14px, 2.6cqw, 34px)/1 'Baloo 2', system-ui, sans-serif;
+         box-shadow: 0 5px 14px rgba(0,0,0,.6); transition: transform .15s; }
+.noeud:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.12); }
+.noeud:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.noeud.n0 { background: radial-gradient(circle at 35% 30%, #5ee0c0, #1a7a70); } .noeud.n1 { background: radial-gradient(circle at 35% 30%, #c8a0ff, #5a2aa8); }
+.noeud.n2 { background: radial-gradient(circle at 35% 30%, #ffb0d8, #9a4a90); } .noeud.n3 { background: radial-gradient(circle at 35% 30%, #a890d0, #3a2a68); }
+.noeud.n4 { background: radial-gradient(circle at 35% 30%, #ffe08a, #c07a20); }
+.noeud.ferme { filter: grayscale(.85) brightness(.6); cursor: not-allowed; }
+.noeud.courant { animation: pulse-noeud 1.2s ease-in-out infinite alternate; border-color: #9fffb4; }
+@keyframes pulse-noeud { from { box-shadow: 0 0 6px #9fffb4, 0 5px 14px rgba(0,0,0,.6); } to { box-shadow: 0 0 24px #9fffb4, 0 5px 14px rgba(0,0,0,.6); } }
+.noeud .badge { position: absolute; right: -6px; top: -6px; width: 1.7em; height: 1.7em; border-radius: 50%; display: grid; place-items: center; font-size: .5em; background: #29b956; border: 2px solid #fff; }
+.noeud .badge.couronne { background: none; border: none; top: -16px; font-size: .75em; }
+.noeud-nom { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: .5cqw; width: 14cqw; text-align: center; font: 600 clamp(10px, 1.35cqw, 20px)/1.25 'Baloo 2', system-ui, sans-serif; text-shadow: 0 2px 4px #000; }
+.noeud-nom b { display: block; color: #fff4dc; } .noeud-nom em { font-style: normal; font-size: .85em; color: #ffd166; }
+@media (prefers-reduced-motion: reduce) { .noeud.courant { animation: none; } }
+
+/* =====================================================
+   LES 3 BOUTONS DU JEU (son, pause, quitter) : même style, juste des symboles, alignés
+   Et : l'attribut « hidden » doit toujours cacher un bouton (sinon le triangle vert restait visible en pause)
+   ===================================================== */
+.btn-play[hidden], .btn-petit[hidden], .carte[hidden] { display: none; }
+#btns-jeu { position: absolute; top: 1.5cqw; right: 2cqw; z-index: 9; display: flex; align-items: center; gap: .7cqw; }
+.btn-rond { width: 3.5cqw; height: 3.5cqw; min-width: 30px; min-height: 30px; padding: 0; border-radius: 50%; cursor: pointer; display: grid; place-items: center; color: #fff4dc;
+            background: rgba(24,12,48,.78); border: 1.8px solid rgba(255,233,160,.6); box-shadow: 0 2px 8px rgba(0,0,0,.45); transition: background .12s, transform .12s; }
+.btn-rond:hover { background: rgba(90,50,150,.92); transform: scale(1.08); }
+.btn-rond:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.btn-rond svg { width: 58%; height: 58%; fill: currentColor; stroke: none; }
+.btn-rond .ondes, .btn-rond .barre, .btn-rond .croix { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.btn-rond .croix { stroke-width: 2.6; }
+.btn-rond .barre { display: none; }
+.btn-rond.muet .ondes { display: none; }
+.btn-rond.muet .barre { display: inline; }
+body.accueil #btn-pause, body.accueil #btn-quitter { display: none; }
+
+/* =====================================================
+   LA BOÎTE DE CONFIRMATION « QUITTER ? » : décor féerique (cadre doré, coins ornés, lune, étincelles)
+   ===================================================== */
+#confirmer { display: none; position: absolute; inset: 0; z-index: 40; align-items: center; justify-content: center; background: rgba(6,2,16,.72); backdrop-filter: blur(2px); }
+#confirmer.ouvert { display: flex; }
+.confirm-carte { position: relative; width: 40cqw; min-width: 280px; padding: 3px; border-radius: 24px; animation: apparition .3s ease-out;
+                 background: linear-gradient(135deg, #fff3c0, #c9972e 38%, #7a4a10 62%, #ffe08a); box-shadow: 0 0 40px rgba(160,110,255,.5), 0 12px 40px rgba(0,0,0,.7); }
+.confirm-inner { position: relative; padding: 2.4cqw 3.4cqw 2.2cqw; border-radius: 21px; text-align: center; color: #fff4dc; overflow: hidden;
+                 background: radial-gradient(ellipse at 50% 0%, #4a2a8a 0%, #241048 55%, #120826 100%); font: 600 clamp(12px, 1.8cqw, 28px)/1.4 'Baloo 2', system-ui, sans-serif; }
+.confirm-inner::before { content: ""; position: absolute; inset: 9px; border: 1.5px dashed rgba(255,233,160,.45); border-radius: 15px; pointer-events: none; }
+.coin { position: absolute; width: 5cqw; height: 5cqw; min-width: 36px; min-height: 36px; pointer-events: none; }
+.coin.c1 { top: 6px; left: 6px; } .coin.c2 { top: 6px; right: 6px; transform: scaleX(-1); }
+.coin.c3 { bottom: 6px; left: 6px; transform: scaleY(-1); } .coin.c4 { bottom: 6px; right: 6px; transform: scale(-1, -1); }
+.confirm-lune { width: 6cqw; min-width: 46px; display: block; margin: 0 auto .1em; filter: drop-shadow(0 0 8px rgba(255,220,120,.75)); }
+.confirm-inner h2 { margin: 0 0 .35em; font: 700 clamp(14px, 2.4cqw, 36px)/1.25 'Cinzel Decorative', Georgia, serif; filter: drop-shadow(0 2px 4px rgba(0,0,0,.6));
+                    background: linear-gradient(180deg, #fff3c0, #f2b84b 60%, #a86a1c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.confirm-inner p { margin: 0 0 1em; opacity: .92; font-size: .9em; }
+.confirm-btns { display: flex; justify-content: center; gap: 1.4cqw; position: relative; z-index: 1; }
+.confirm-btns .btn-petit { min-width: 8cqw; }
+.btn-petit.rose { background: linear-gradient(#f08ac0, #b03a80); border-color: rgba(255,255,255,.6); color: #fff; text-shadow: 0 1px 2px rgba(80,0,40,.5); }
+.btn-petit.rose:hover { background: linear-gradient(#f8a0d0, #c84a96); }
+.etincelle { position: absolute; color: #ffe9a0; font-size: 1.7cqw; font-style: normal; opacity: 0; pointer-events: none; text-shadow: 0 0 8px #ffd166; animation: scintille 2.4s ease-in-out infinite; }
+@keyframes scintille { 0%, 100% { opacity: 0; transform: scale(.6) rotate(0deg); } 50% { opacity: .95; transform: scale(1.15) rotate(25deg); } }
+@keyframes apparition { from { opacity: 0; transform: scale(.92) translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .etincelle { animation: none; opacity: .6; } .confirm-carte { animation: none; } }
+
+/* =====================================================
+   LES 3 CARTES DE TAILLE (3×3, 5×5, 7×7) SUR LE CÔTÉ GAUCHE, ET LE BOUTON AIDE
+   ===================================================== */
+#fenetres { position: absolute; left: 1.5cqw; top: 50%; transform: translateY(-50%); z-index: 7; display: flex; flex-direction: column; gap: .9cqw; }
+body.accueil #fenetres, body.accueil #btn-aide { display: none; }
+.fen-btn { width: 8cqw; min-width: 66px; padding: .55cqw .4cqw .6cqw; border-radius: 13px; cursor: pointer; color: #fff4dc; display: flex; flex-direction: column; align-items: center; gap: .35cqw;
+           border: 2px solid rgba(255,209,102,.5); background: radial-gradient(ellipse at 50% 28%, #7a5a14 0%, #2a1c06 92%); box-shadow: 0 3px 8px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.07);
+           font: 700 clamp(11px, 1.5cqw, 22px)/1 'Baloo 2', system-ui, sans-serif; transition: transform .15s, box-shadow .15s, filter .15s; }
+.fen-btn:hover { transform: translateX(.5cqw); }
+.fen-btn[aria-pressed="true"] { border-color: #fff; filter: brightness(1.25); transform: translateX(.9cqw); box-shadow: 0 0 16px #ffd166, 0 3px 8px rgba(0,0,0,.5); }
+.fen-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.fen-btn .fen-grille { margin: 0; width: 4.6cqw; height: 4.6cqw; min-width: 38px; min-height: 38px; }
+#fenetres.conseil .fen-btn { animation: conseil-fen .9s ease-in-out infinite alternate; }
+@keyframes conseil-fen { from { box-shadow: 0 0 6px #fff, 0 0 12px #ffd166; } to { box-shadow: 0 0 20px #fff, 0 0 34px #ffd166; } }
+.btn-rond .qm { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+.btn-rond .pt { fill: currentColor; stroke: none; }
+@media (prefers-reduced-motion: reduce) { #fenetres.conseil .fen-btn { animation: none; box-shadow: 0 0 18px #fff, 0 0 26px #ffd166; } }
+
+/* =====================================================
+   NOUVELLE MISE EN PAGE : à gauche la taille de la carte, au centre l'écran de jeu, à droite les filtres (+ Aide)
+   Les cartes sont HORS du cadre de jeu, l'une sous l'autre.
+   ===================================================== */
+body { display: block; }
+#scene { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; height: 100%; }
+#col-g, #col-d { flex: none; width: 138px; display: flex; flex-direction: column; align-items: center; gap: 9px; max-height: 100vh; padding: 8px 0; box-sizing: border-box; }
+.col-titre { margin: 0; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; color: #ffd166; letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 2px 4px #000; text-align: center; }
+body.accueil #col-g, body.accueil #col-d { visibility: hidden; }
+#col-d .carte { flex: none; width: 126px; height: clamp(78px, 13.6vh, 110px); padding: 3px 3px 4px; gap: 0; }
+#col-d .carte-art { width: 66px; height: 40px; margin-top: 10px; }
+#col-d .carte b { font-size: 13px; }
+#col-d .carte-desc { font-size: 10.5px; line-height: 1.1; }
+#col-d .carte kbd { top: 3px; left: 4px; }
+#col-d .btn-petit { width: 126px; min-width: 0; margin-top: 2px; }
+#fenetres { position: static; transform: none; left: auto; top: auto; display: flex; flex-direction: column; gap: 10px; }
+.fen-btn { width: 126px; min-width: 0; padding: 7px 8px; flex-direction: row; justify-content: flex-start; gap: 10px; }
+.fen-btn:hover { transform: translateY(-2px); }
+.fen-btn[aria-pressed="true"] { transform: translateY(-3px); }
+.fen-btn .fen-grille { flex: none; width: 46px; height: 46px; min-width: 0; min-height: 0; }
+.fen-nom { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+.fen-nom b { font-size: 15px; color: #ffe9a0; } .fen-nom small { font-size: 12px; opacity: .8; font-weight: 600; }
+
+/* ---------- La fenêtre d'aide ---------- */
+#aide { display: none; position: absolute; inset: 0; z-index: 35; align-items: center; justify-content: center; background: rgba(6,2,16,.8); }
+#aide.ouvert { display: flex; }
+.aide-carte { position: relative; width: 66cqw; max-height: 92%; overflow-y: auto; padding: 1.8cqw 3cqw 1.6cqw; border-radius: 22px; color: #fff4dc; border: 3px solid #c9972e;
+              background: radial-gradient(ellipse at 50% 0%, #4a2a8a 0%, #241048 55%, #120826 100%); box-shadow: 0 0 40px rgba(160,110,255,.45), 0 12px 40px rgba(0,0,0,.7);
+              font: 600 clamp(11px, 1.3cqw, 20px)/1.35 'Baloo 2', system-ui, sans-serif; }
+.aide-carte h2 { margin: 0 0 .4em; text-align: center; font: 700 clamp(16px, 2.6cqw, 40px)/1.2 'Cinzel Decorative', Georgia, serif; background: linear-gradient(180deg, #fff3c0, #f2b84b 60%, #a86a1c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.aide-carte p { margin: .45em 0; }
+.aide-etapes { margin: .4em 0; padding-left: 1.4em; } .aide-etapes li { margin: .35em 0; }
+.aide-danger { padding: .5em .9em; border-radius: 12px; background: rgba(224,85,110,.18); border: 1.5px solid rgba(255,140,160,.55); }
+.aide-regles { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8cqw; margin: .6em 0; }
+.aide-regles div { padding: .5em .6em; border-radius: 12px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,233,160,.3); font-size: .92em; text-align: center; }
+.aide-bas { text-align: center; margin-top: .7em; }
+
+/* =====================================================
+   L'ACCUEIL façon « jeu d'aventure » : fond violet, cercles ornés, titre à fioritures, menu en texte centré
+   ===================================================== */
+.hk-fond { position: absolute; inset: 0; pointer-events: none; }
+.hk-mandala { position: absolute; color: rgba(210,160,255,.28); }
+.hk-mandala.m1 { width: 46cqw; left: -8cqw; top: -14cqw; animation: hk-tourne 160s linear infinite; }
+.hk-mandala.m2 { width: 52cqw; right: -12cqw; top: -10cqw; color: rgba(230,150,255,.22); animation: hk-tourne 220s linear infinite reverse; }
+.hk-mandala.m3 { width: 38cqw; right: 8cqw; bottom: -18cqw; animation: hk-tourne 190s linear infinite; }
+.bokeh { position: absolute; border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(255,150,230,.95), rgba(230,90,200,.55) 55%, rgba(200,60,180,0) 72%); filter: blur(.5px); opacity: .8; animation: hk-flotte 9s ease-in-out infinite; }
+.bokeh.b1 { width: 4.2cqw; height: 4.2cqw; left: 6cqw; top: 22cqw; } .bokeh.b2 { width: 2.2cqw; height: 2.2cqw; left: 10cqw; top: 31cqw; animation-delay: -3s; }
+.bokeh.b3 { width: 1.5cqw; height: 1.5cqw; left: 17cqw; top: 37cqw; animation-delay: -5s; opacity: .6; } .bokeh.b4 { width: 3cqw; height: 3cqw; right: 9cqw; top: 26cqw; animation-delay: -2s; background: radial-gradient(circle at 40% 35%, rgba(190,150,255,.9), rgba(140,100,230,.5) 55%, rgba(120,80,220,0) 72%); }
+.bokeh.b5 { width: 2cqw; height: 2cqw; right: 16cqw; top: 15cqw; animation-delay: -6s; opacity: .55; } .bokeh.b6 { width: 5cqw; height: 5cqw; right: 22cqw; bottom: 3cqw; animation-delay: -4s; opacity: .45; }
+.bokeh.b7 { width: 2.6cqw; height: 2.6cqw; left: 26cqw; bottom: 5cqw; animation-delay: -1s; opacity: .5; }
+@keyframes hk-tourne { to { transform: rotate(360deg); } }
+@keyframes hk-flotte { 0%, 100% { transform: translate(0, 0); opacity: .8; } 50% { transform: translate(.8cqw, -1.4cqw); opacity: .45; } }
+.accueil-contenu { position: relative; gap: 2.6cqw; }
+.accueil-titre { display: flex; flex-direction: column; align-items: center; gap: .5cqw; color: #efe6ff; }
+.accueil-titre small { color: #cdb8f5; letter-spacing: .32em; text-shadow: 0 0 10px rgba(190,150,255,.7); }
+.accueil-titre h1 { margin: 0; font: 700 clamp(26px, 5.4cqw, 84px)/1.08 'Cinzel Decorative', Georgia, serif; letter-spacing: .04em; text-transform: uppercase; color: #fbf6ff; background: none; -webkit-background-clip: border-box; background-clip: border-box;
+           filter: none; text-shadow: 0 0 .5cqw rgba(225,200,255,.95), 0 0 2.2cqw rgba(170,110,255,.75), 0 .3cqw .8cqw rgba(0,0,0,.6); }
+.orn { width: 30cqw; height: auto; color: #e9dcff; filter: drop-shadow(0 0 5px rgba(190,140,255,.85)); }
+.orn.bas { transform: scaleY(-1); }
+.hk-menu { display: flex; flex-direction: column; align-items: center; gap: .55cqw; }
+.hk-item { position: relative; padding: .15em 1.6em; background: none; border: 0; cursor: pointer; font: 700 clamp(14px, 2.15cqw, 34px)/1.3 'Cinzel Decorative', Georgia, serif; letter-spacing: .08em;
+           color: rgba(238,228,255,.72); text-shadow: 0 2px 6px rgba(0,0,0,.6); transition: color .15s, text-shadow .15s, transform .15s; }
+.hk-item[hidden] { display: none; }
+.hk-item::before, .hk-item::after { position: absolute; top: 50%; transform: translateY(-50%) scale(.6); opacity: 0; font-size: .75em; color: #f2e8ff; transition: opacity .15s, transform .15s; }
+.hk-item::before { content: "❬"; left: .2em; } .hk-item::after { content: "❭"; right: .2em; }
+.hk-item:hover, .hk-item:focus-visible, .hk-item:focus { outline: none; color: #fff; text-shadow: 0 0 .7cqw rgba(235,215,255,.95), 0 0 1.8cqw rgba(170,110,255,.9); transform: scale(1.05); }
+.hk-item:hover::before, .hk-item:hover::after, .hk-item:focus::before, .hk-item:focus::after { opacity: 1; transform: translateY(-50%) scale(1); }
+.hk-coin { position: absolute; bottom: 1.6cqw; font: 600 clamp(9px, 1.15cqw, 16px)/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .12em; color: rgba(215,195,250,.6); text-transform: uppercase; }
+.hk-coin.g { left: 2.2cqw; } .hk-coin.d { right: 2.2cqw; }
+@media (prefers-reduced-motion: reduce) { .hk-mandala, .bokeh { animation: none; } }
+
+.fen-btn { padding: 6px 6px; gap: 6px; }
+.fen-btn .fen-grille { width: 38px; height: 38px; }
+.fen-nom b { font-size: 14px; }
+#tuto { font-size: .92em; }
+.col-titre { margin-bottom: 12px; }
+.aide-carte { font-size: clamp(11px, 1.3cqw, 20px); line-height: 1.35; padding-top: 1.2cqw; padding-bottom: 1.2cqw; }
+.aide-carte p { margin: .35em 0; } .aide-etapes li { margin: .2em 0; } .aide-bas { margin-top: .5em; }
+
+/* panneau d'explication plus petit : seulement un titre et deux rangées de cases */
+#explication { width: 22cqw; padding: .6cqw .9cqw; font-size: .9em; }
+#explication h3 { margin: 0 0 .25em; font-size: 1.05em; }
+.ex-ligne span { width: 6cqw; }
+.ex-case { width: 1.5cqw; height: 1.5cqw; }
+
+/* ---------- Le message après un filtre : une ligne horizontale SOUS l'écran de jeu ---------- */
+#explication { position: fixed; top: auto; left: 50%; bottom: 8px; width: var(--cadre-w, 80vw); max-width: 100vw; height: 44px; padding: 0 20px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+               transform: translateX(-50%) translateY(10px); border-radius: 14px; font-size: 18px; }
+#explication.visible { transform: translateX(-50%); }
+#explication h3 { margin: 0; font-size: 1em; color: #ffd166; text-align: center; white-space: nowrap; }
+#explication.echec h3 { color: #ff9aa8; }
+
+/* le bouton de volume reste visible, au-dessus de l'accueil */
+body.accueil #btns-jeu { z-index: 36; }
+
+/* ---------- Le prix des cartes ---------- */
+.fen-cout { color: #ffd34d; font-weight: 700; }
+/* ---------- Le bilan d'apprentissage ---------- */
+#bilan { display: none; position: absolute; inset: 0; z-index: 35; align-items: center; justify-content: center; background: rgba(6,2,16,.8); }
+#bilan.ouvert { display: flex; }
+.bilan-intro { margin: .2em 0 .6em; }
+.bilan-tab { width: 100%; border-collapse: collapse; font-size: .95em; }
+.bilan-tab th, .bilan-tab td { padding: .35em .5em; border-bottom: 1px solid rgba(255,233,160,.25); text-align: center; }
+.bilan-tab th { color: #ffd166; font-weight: 700; } .bilan-tab td:first-child { text-align: left; font-weight: 700; }
+
+/* ---------- Les trois nouveaux filtres ---------- */
+.c-gaussien { --c1: #1f7a82; --c2: #0a2a30; --bord: #8ff0f0; --lueur: #5ad0d0; }
+.c-nettete  { --c1: #8a6a1a; --c2: #2a1f08; --bord: #ffe08a; --lueur: #ffd34d; }
+.c-contours { --c1: #8a2a5a; --c2: #2a0a1a; --bord: #ffa0d0; --lueur: #ff6ab0; }
+.carte[hidden] { display: none !important; }
+/* plus de 4 filtres : les cartes se serrent pour que tout tienne à l'écran */
+#col-d.dense { gap: 5px; }
+#col-d.dense .carte { height: clamp(58px, 9.2vh, 84px); }
+#col-d.dense .carte-art { width: 46px; height: 28px; margin-top: 6px; }
+#col-d.dense .carte-desc { display: none; }
+#col-d.dense .btn-petit { padding-top: .1em; padding-bottom: .1em; }
+
+/* =====================================================
+   LES CARTES DE TAILLE en pierre dorée (pixel art) : cadre sculpté et plaque de nom. Les cartes de filtres gardent leur ancien style.
+   Les images viennent de assets/ui/ (cadre, plaque).
+   ===================================================== */
+:root { --pierre-police: 'Pixelify Sans', 'Silkscreen', ui-monospace, 'Courier New', monospace; }
+.plaque { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); z-index: 3; min-width: 56%; max-width: 96%; height: 26px; box-sizing: border-box;
+          padding: 0 4px; border-style: solid; border-width: 0 12px; border-color: transparent; border-image: url(assets/ui/plaque.png) 0 6 0 6 fill / 0 12px / 0 stretch;
+          image-rendering: pixelated; font: 700 14px/26px var(--pierre-police); color: #b4c2e0; text-shadow: 1px 1px 0 #140d24; text-align: center; white-space: nowrap; pointer-events: none; }
+.fen-btn { --cadre: url(assets/ui/cadre-tailles.png); --glow: #e09a28; position: relative; box-sizing: border-box; background: none !important; box-shadow: none !important; border-radius: 0 !important;
+           border-style: solid !important; border-color: transparent !important; border-width: 16px !important; overflow: visible !important;
+           border-image-source: var(--cadre) !important; border-image-slice: 8 fill !important; border-image-width: 16px !important; border-image-repeat: round !important;
+           image-rendering: pixelated; filter: none; transition: transform .12s, filter .12s; }
+.fen-btn:hover { transform: translateY(-3px); filter: brightness(1.15); }
+.fen-btn[aria-pressed="true"] { transform: translateX(6px); filter: brightness(1.3) drop-shadow(0 0 7px var(--glow)); border-color: transparent !important; }
+#col-g .fen-btn { width: 138px; height: clamp(84px, 12.6vh, 104px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; gap: 2px; margin-top: 6px; }
+#col-g .fen-btn .fen-grille { width: 40px; height: 40px; margin-top: 6px; }
+#col-g .fen-cout { font: 700 13px/1 var(--pierre-police); color: #ffd34d; }
+#fenetres { gap: 6px; }
+.ecran-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: .9cqw; margin: .3em 0 .6em; }
+.ecran-stats span { padding: .1em .8em; border-radius: 99px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,233,160,.55); font-weight: 700; font-size: 1.25em; white-space: nowrap; }
+
+
+/* =====================================================
+   RESPONSIVE : body.compact (paysage, petit écran) et body.portrait (téléphone droit)
+   Les classes sont posées par redimensionner() dans jeu.js
+   ===================================================== */
+html, body { height: 100%; height: 100dvh; }
+html { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+@media (hover: none) { .carte kbd { display: none; } .carte:hover, .fen-btn:hover, .btn-petit:hover { transform: none; } }
+@media (hover: none) and (pointer: coarse) { #commandes button { width: 58px; height: 58px; font-size: 22px; } }
+
+/* ---------- PAYSAGE SUR PETIT ÉCRAN ---------- */
+body.compact #scene { gap: 8px; }
+body.compact #col-g, body.compact #col-d { width: 104px; gap: 5px; padding: 4px 0; max-height: 100dvh; }
+body.compact #col-d { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+body.compact #col-d::-webkit-scrollbar { display: none; }
+body.compact #col-g .fen-btn { width: 100px; height: 72px; border-width: 12px !important; border-image-width: 12px !important; }
+body.compact #col-g .fen-btn .fen-grille { width: 28px; height: 28px; margin-top: 4px; }
+body.compact #col-g .fen-cout { font-size: 11px; }
+body.compact .plaque { font-size: 11px; height: 20px; line-height: 20px; top: -9px; }
+body.compact #col-d .carte { width: 100px; height: 40px; flex-direction: row; justify-content: center; align-items: center; gap: 5px; padding: 2px 4px; }
+body.compact #col-d .carte-art { width: 32px; height: 20px; margin: 0; }
+body.compact #col-d .carte b { font-size: 12px; }
+body.compact #col-d .carte-desc { display: none; }
+body.compact #col-d .carte kbd { font-size: 8px; top: 1px; left: 3px; padding: 0 3px; }
+body.compact #col-d .carte[aria-pressed="true"] { transform: scale(1.06); }
+body.compact #col-d .btn-petit { width: 100px; font-size: 12px; }
+body.compact #explication { height: 34px; font-size: 14px; bottom: 4px; }
+body.compact .aide-carte { width: 86cqw; }
+body.compact #commandes { left: calc((100vw - var(--cadre-w, 80vw)) / 2 + 8px); right: calc((100vw - var(--cadre-w, 80vw)) / 2 + 8px); bottom: 44px; padding: 0; }
+
+/* ---------- PORTRAIT (téléphone droit) : le jeu en haut, les cartes en lignes dessous ---------- */
+body.portrait #scene { flex-direction: column; justify-content: center; gap: 6px; }
+body.portrait #cadre { order: 0; }
+body.portrait #explication { order: 1; position: static; transform: none !important; width: var(--cadre-w); height: 40px; flex: none; padding: 0 8px; font-size: 12px; }
+body.portrait #explication h3 { white-space: normal; font-size: 12px; line-height: 1.15; }
+body.portrait #col-g { order: 2; }
+body.portrait #col-d { order: 3; }
+body.portrait #col-g, body.portrait #col-d { width: 100%; max-height: none; flex-direction: row; padding: 0 6px; box-sizing: border-box; }
+body.portrait #fenetres { flex-direction: row; gap: 6px; width: 100%; justify-content: center; }
+body.portrait #col-g .fen-btn { flex: 1 1 0; width: auto; max-width: 140px; height: 76px; margin-top: 8px; border-width: 12px !important; border-image-width: 12px !important; }
+body.portrait #col-g .fen-btn .fen-grille { width: 26px; height: 26px; margin-top: 2px; }
+body.portrait #col-g .fen-cout { font-size: 11px; }
+body.portrait .plaque { font-size: 11px; height: 20px; line-height: 20px; top: -9px; }
+body.portrait #col-d { overflow-x: auto; overflow-y: hidden; justify-content: flex-start; align-items: flex-end; gap: 6px; padding-top: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+body.portrait #col-d::-webkit-scrollbar { display: none; }
+body.portrait #col-d .carte { flex: none; width: 74px; height: 70px; }
+body.portrait #col-d .carte-art { width: 44px; height: 27px; margin-top: 8px; }
+body.portrait #col-d .carte b { font-size: 11px; }
+body.portrait #col-d .carte-desc, body.portrait #col-d .carte-sep { display: none; }
+body.portrait #col-d .btn-petit { flex: none; width: 74px; height: 70px; font-size: 12px; }
+body.portrait #commandes { bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); padding: 0 12px; gap: 8px; }
+
+/* HUD du jeu : deux rangées au lieu d'une */
+body.portrait #btns-jeu { top: 1.5cqw; right: 1.5cqw; gap: 6px; }
+body.portrait .btn-rond { width: 30px; height: 30px; }
+body.portrait #hud { top: 1.5cqw; left: 1.5cqw; right: 112px; gap: 4px 6px; flex-wrap: wrap; }
+body.portrait #coeurs { font-size: 15px; }
+body.portrait #niveau, body.portrait #chrono, body.portrait #pieces { font-size: 12px; }
+body.portrait #progression { order: 9; flex: 1 1 100%; height: 10px; margin: 4px 8px 0 0; }
+body.portrait #marqueur, body.portrait #but { font-size: 16px; }
+body.portrait #bulle { top: 62px; right: 1.5cqw; max-width: 58cqw; font-size: 11px; }
+body.portrait #bandeau { top: 64px; max-width: 90cqw; font-size: 13px; }
+body.portrait #tuto { max-width: 92cqw; bottom: 6px; font-size: 12px; }
+
+/* Accueil et fenêtres */
+body.portrait .orn { display: none; }
+body.portrait .accueil-contenu { gap: 10px; }
+body.portrait .accueil-titre small { font-size: 10px; letter-spacing: .12em; }
+body.portrait .accueil-titre h1 { font-size: 22px; }
+body.portrait .hk-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+body.portrait .hk-item { padding: .1em .8em; font-size: 14px; }
+body.portrait .aide-carte { width: 94cqw; max-height: 96%; padding: 12px 14px; font-size: 11px; }
+body.portrait .aide-regles { grid-template-columns: 1fr 1fr; gap: 6px; }
+body.portrait #bilan-corps { overflow-x: auto; }
+body.portrait .bilan-tab { font-size: 10px; }
+body.portrait .intro-carte { width: 94cqw; padding: 10px 14px; }
+body.portrait .intro-carte canvas { width: 85%; }
+body.portrait .confirm-carte { width: 88cqw; min-width: 0; }
+body.portrait .confirm-inner { padding: 14px 16px; }
+body.portrait .ecran-carte { padding: 12px 16px; }
+body.portrait .ecran-boutons { flex-wrap: wrap; }
+body.portrait .carte-chemin { width: 92cqw; height: 58cqw; }
+body.portrait .noeud-nom { width: 22cqw; font-size: 9px; }
+body.portrait .noeud-nom em { display: none; }
