@@ -17,13 +17,13 @@ const VELOURS = [[0, '#070e26'], [0.45, '#16327a'], [0.8, '#3a68c8'], [1, '#1f3f
 const PANTALON_P = [[0, '#07080e'], [0.5, '#1c1f2e'], [0.85, '#3a4058'], [1, '#262a3c']];
 const BOTTE = [[0, '#120a05'], [0.5, '#3a2414'], [0.85, '#6a4426'], [1, '#4a2e1a']];
 const PEAU_P = [[0, '#7a4a36'], [0.5, '#d9a07a'], [0.85, '#f5cfae'], [1, '#c98f6a']];
-const CAPE_V = [[0, '#0c2214'], [0.45, '#245238'], [0.8, '#4a8a5c'], [1, '#1c4430']];            // la cape verte
-const BLOUSE = [[0, '#7a869c'], [0.5, '#e6edf6'], [0.85, '#ffffff'], [1, '#aab6c8']];            // la chemise blanche
-const PANT_B = [[0, '#140e0a'], [0.5, '#46362a'], [0.85, '#7a6654'], [1, '#56463a']];            // le pantalon brun
-const BOTTE_B = [[0, '#120a05'], [0.5, '#3e2a1c'], [0.85, '#6e4e32'], [1, '#4e3622']];           // les bottes brunes
-const REVERS = [[0, '#8a7a5a'], [0.5, '#d8c8a0'], [1, '#f0e4c4']];                              // les revers clairs des bottes
-const PEAU_E = [[0, '#a8745c'], [0.5, '#f2c8b0'], [0.85, '#ffe6d6'], [1, '#d8a890']];            // la peau claire
-const CHEVEUX_B = [[0, '#8c9ab4'], [0.5, '#e8eef8'], [1, '#ffffff']];                            // les cheveux blancs
+const CAPE_V = [[0, '#0c2214'], [0.45, '#245238'], [0.8, '#4a8a5c'], [1, '#1c4430']];
+const BLOUSE = [[0, '#7a869c'], [0.5, '#e6edf6'], [0.85, '#ffffff'], [1, '#aab6c8']];
+const PANT_B = [[0, '#140e0a'], [0.5, '#46362a'], [0.85, '#7a6654'], [1, '#56463a']];
+const BOTTE_B = [[0, '#120a05'], [0.5, '#3e2a1c'], [0.85, '#6e4e32'], [1, '#4e3622']];
+const REVERS = [[0, '#8a7a5a'], [0.5, '#d8c8a0'], [1, '#f0e4c4']];
+const PEAU_E = [[0, '#a8745c'], [0.5, '#f2c8b0'], [0.85, '#ffe6d6'], [1, '#d8a890']];
+const CHEVEUX_B = [[0, '#8c9ab4'], [0.5, '#e8eef8'], [1, '#ffffff']];
 
 function degrade(x0, y0, x1, y1, stops) {
   const g = ctx.createLinearGradient(x0, y0, x1, y1); stops.forEach(([p, c]) => g.addColorStop(p, c)); return g;
@@ -65,7 +65,7 @@ function dessinerPrince(sx, sy) {
     const a1 = j[0], a2 = j[0] - j[1], kx = L1 * Math.sin(a1), ky = hy + L1 * Math.cos(a1), ax = kx + L2 * Math.sin(a2), ay = ky + L2 * Math.cos(a2);
     const mx = kx + (ax - kx) * 0.62, my = ky + (ay - ky) * 0.62, nx = kx + (ax - kx) * 0.74, ny = ky + (ay - ky) * 0.74;
     piece(0, hy, kx, ky, 19, 15, assombrir(PANT_B, k)); piece(kx, ky, mx, my, 15, 11, assombrir(PANT_B, k));
-    piece(mx, my, nx, ny, 13, 13, assombrir(REVERS, k));                                         // le revers clair
+    piece(mx, my, nx, ny, 13, 13, assombrir(REVERS, k));
     piece(nx, ny, ax, ay, 10, 9, assombrir(BOTTE_B, k));
     const pitch = Math.max(-0.5, Math.min(0.6, -a2 * 0.7));
     piece(ax - 3, ay + 1, ax + 15 * Math.cos(pitch), ay + 1 + 15 * Math.sin(pitch), 11, 6, assombrir(BOTTE_B, k));
@@ -93,7 +93,7 @@ function dessinerPrince(sx, sy) {
   ctx.fillStyle = degrade(-34, 0, 6, 0, CAPE_V); ctx.fill(); ctx.strokeStyle = 'rgba(5,20,10,0.8)'; ctx.lineWidth = 1.4; ctx.stroke();
   ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2;
   for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-8 - i * 3, -34); ctx.quadraticCurveTo(-14 + vent * (0.3 + i * 0.2), 10, -14 + vent * (0.6 + i * 0.3) - i * 3, 46); ctx.stroke(); }
-  broderie(-6 + vent * 0.05, -34, -22 + vent * 0.95, 50, 7);                                    // broderie dorée au bord de la cape
+  broderie(-6 + vent * 0.05, -34, -22 + vent * 0.95, 50, 7);
   bras(-3, -36, -0.1 + 0.55 * Math.sin(ph) * amp - (bas ? 0.4 : 0), 0.45, 0.55);
   ctx.restore();
 

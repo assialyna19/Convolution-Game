@@ -7,12 +7,12 @@
 let tutoActif = false, tutoEtape = 0, tutoDelai = 0;
 const elTuto = document.getElementById('tuto'), elTutoTexte = document.getElementById('tuto-texte'), elTutoNum = document.getElementById('tuto-num');
 
-const proche = (i, d) => !!pieges[i] && heros.x > pieges[i].zx - d;                // le héros approche du piège numéro i
+const proche = (i, d) => !!pieges[i] && heros.x > pieges[i].zx - d;
 const resolu = i => !pieges[i] || pieges[i].etat === 'resolu';
 const ETAPES = [
   { texte: "Bienvenue à l'entraînement ! Ici, tu ne perds aucune vie : tu peux te tromper. Avance avec les flèches ← →.", fait: () => heros.x > 340 },
   { texte: "Mets tes lunettes magiques : touche L. Tu vois alors les pièges comme des grilles de petits carrés.", fait: () => lunettes, cartes: ['lunettes'] },
-  { texte: "Du sable mouvant ! Choisis une taille de carte à gauche, la Brume à droite, puis appuie sur E. Regarde la carte glisser doucement sur les carrés !", quand: () => proche(0, 560), fait: () => resolu(0), cartes: ['fenetre', 'flou'] },
+  { texte: "Du sable mouvant ! Choisis une taille de carte à gauche, la Brume à droite, puis E. Réponds à la question de ta carte !", quand: () => proche(0, 560), fait: () => resolu(0), cartes: ['fenetre', 'flou'] },
   { texte: "Un trou de 2 cases. Compte ses carrés ! Ta carte doit être plus grande que le trou. Choisis la bonne carte, le Mortier, puis E.", quand: () => proche(1, 560), fait: () => resolu(1), cartes: ['fenetre', 'fermeture'] },
   { texte: "Un trou de 4 cases ! La petite carte (3) est trop petite… Essaie la carte moyenne (5) ou la carte suprême (7).", quand: () => proche(2, 560), fait: () => resolu(2), cartes: ['fenetre', 'fermeture'] },
   { texte: "Un trou de 6 cases : seule la carte suprême (7) est plus grande que lui !", quand: () => proche(3, 560), fait: () => resolu(3), cartes: ['fenetre', 'fermeture'] },
@@ -35,7 +35,7 @@ function majTuto(dt) {
   while (tutoEtape < ETAPES.length && ETAPES[tutoEtape].fait() && (!ETAPES[tutoEtape].quand || ETAPES[tutoEtape].quand())) tutoEtape++;   // les exercices déjà réussis sont sautés
   const e = ETAPES[tutoEtape];
   if (!e) { finTuto(true); return; }
-  if (e.quand && !e.quand()) { elTuto.classList.remove('visible'); surligner([]); return; }                                              // pas encore le moment
+  if (e.quand && !e.quand()) { elTuto.classList.remove('visible'); surligner([]); return; }
   elTutoNum.textContent = 'Entraînement ' + (tutoEtape + 1) + '/' + ETAPES.length; elTutoTexte.textContent = e.texte;
   elTuto.classList.add('visible'); surligner(e.cartes);
 }

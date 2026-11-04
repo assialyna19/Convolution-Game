@@ -94,7 +94,7 @@ function messageFinal() {
 }
 
 function etapeSuivante() { labo.p++; Object.assign(labo, { i: 0, acc: 0, attente: 0 }); majTexteLabo(); }
-function avancer() {                                       // la fenêtre passe à la case suivante
+function avancer() {
   const total = labo.ech.w * labo.ech.h;
   if (labo.i < total) labo.i++;
   if (labo.i >= total) {
@@ -131,7 +131,7 @@ function dessinerLabo() {
   }
   if (fini || labo.attendre) return;
   const x = labo.i % w, y = Math.floor(labo.i / w), gx = GX1 + (x - r) * CS, gy = GY + (y - r) * CS, t = n * CS;
-  dessinerMatrice(gx, gy, n, CS, ph.op, 1, lc);                                              // la matrice du filtre, colorée, avec ses poids
+  dessinerMatrice(gx, gy, n, CS, ph.op, 1, lc);
   lc.strokeStyle = '#b5654f'; lc.lineWidth = 6; lc.lineCap = 'round';                         // le manche de la loupe
   lc.beginPath(); lc.moveTo(gx + t, gy + t); lc.lineTo(gx + t + 16, gy + t + 16); lc.stroke();
   lc.strokeStyle = '#ffd166'; lc.lineWidth = 3; lc.strokeRect(GX2 + x * CS - 1, GY + y * CS - 1, CS + 1, CS + 1);   // case en cours de calcul

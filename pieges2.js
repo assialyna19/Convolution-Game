@@ -2,7 +2,7 @@
    LES TROIS NOUVEAUX FILTRES MAGIQUES et leurs pièges
      • Gaussien  -> la TORNADE   (niveaux 2 et 5)  : on calme les débris sans remplir l'œil de la tornade
      • Netteté   -> le BROUILLARD (niveaux 3 et 5) : on fait ressortir les lanternes cachées qui marquent le pont
-     • Contours  -> la PORTE SECRÈTE (niveaux 4 et 5) : on ne garde que les changements brusques, ils dessinent la porte
+     • Contours  -> la PORTE SECRÈTE (niveaux 4 et 5) : un trait là où le clair (le mur) touche le sombre (la porte cachée)
    Ce sont de vraies convolutions linéaires (voir convolution.js). Chaque piège est une grille de nombres entre 0 et 1.
    Les réglages (graines, seuils) ont été calculés pour que le bon choix de carte soit bien défini :
      tornade : seule la carte moyenne réussit | porte secrète : seule la carte moyenne réussit | brouillard : la moyenne ou la suprême (ou seulement la suprême)
@@ -28,7 +28,9 @@ Object.assign(TYPES, {
 });
 
 /* ---------- La fabrication de chaque grille ---------- */
-const FISSURE = (() => { const s = new Set(), cols = 14; for (let y = 1; y < 6; y++) { s.add(y * cols + 5); s.add(y * cols + 8); } for (let x = 5; x <= 8; x++) s.add(1 * cols + x); return s; })();   // les cases de la fissure de la porte
+const PORTE = { c0: 5, c1: 8, r0: 1 };                   // la porte secrète du mur : colonnes 5 à 8, de la rangée 1 jusqu'au sol
+const dansPorte = (c, r) => c >= PORTE.c0 && c <= PORTE.c1 && r >= PORTE.r0;
+const FISSURE = (() => { const s = new Set(), cols = 14; for (let y = 1; y < 6; y++) { s.add(y * cols + 5); s.add(y * cols + 8); } for (let x = 5; x <= 8; x++) s.add(1 * cols + x); return s; })();
 const VARIANTES_BROUILLARD = { A: { per: 4, m: 3, k: 0.4, a: 0.04, seed: 24 }, B: { per: 4, m: 3, k: 0.3, a: 0.04, seed: 50 } };
 const NOUVEAUX = {
   tornade: {
@@ -47,25 +49,25 @@ const NOUVEAUX = {
     echec: (p, n) => n < tailleMinimale(p) ? 'trop petite : la tornade reste agitée' : 'trop grande : les débris remplissent l\'œil',
     ok: "✔ La tornade est calmée : l'œil est libre !"
   },
-  mur: {
+  mur: {                                                   // le Fusain : la porte secrète est plus sombre que le mur ; le Fusain dessine son CONTOUR
     hazard: 'epines',
     creer(d) {
-      const cols = 14, rows = 6, c = 54, r = rngP(74), g = new Array(cols * rows);
-      for (let i = 0; i < g.length; i++) { g[i] = 0.5 + (r() - 0.5) * 2 * 0.05; if (FISSURE.has(i)) g[i] -= 0.3; }                                    // un mur un peu rugueux, avec la fine fissure d'une porte
+      const cols = 14, rows = 6, c = 54, g = new Array(cols * rows);
+      for (let i = 0; i < g.length; i++) g[i] = dansPorte(i % cols, Math.floor(i / cols)) ? 0 : 1;              // 1 = la pierre du mur (claire), 0 = la porte cachée (sombre)
       return { g, cols, rows, zx: d.x + 2 * c, zl: (cols - 4) * c, y0: SOL_Y - rows * c, zy0: SOL_Y - rows * c, zy1: SOL_Y + 2, info: {} };
     },
-    reussi(p, s) {                                         // réussi si la fissure ressort ET s'il n'y a presque pas de faux contours
-      const cols = p.cols; let vus = 0, faux = 0;
-      FISSURE.forEach(i => { if (s[i] > 0.05) vus++; });
-      for (let i = 0; i < s.length; i++) {
-        const x = i % cols, y = Math.floor(i / cols); let loin = x >= 2 && x < cols - 2 && y < p.rows - 1;
-        if (loin) for (const f of FISSURE) if (Math.abs(f % cols - x) <= 1 && Math.abs(Math.floor(f / cols) - y) <= 1) { loin = false; break; }
-        if (loin && s[i] > 0.05) faux++;
+    reussi(p, s) {                                         // réussi si tout le bord de la porte a un trait ET si le milieu de la porte reste libre (on peut passer)
+      const cols = p.cols; let ok = true;
+      for (let r = 0; r < p.rows; r++) for (let c = 0; c < cols; c++) {
+        if (!dansPorte(c, r)) continue;
+        const bord = !dansPorte(c - 1, r) || !dansPorte(c + 1, r) || !dansPorte(c, r - 1), coeur = [-1, 0, 1].every(dx => [-1, 0, 1].every(dy => dansPorte(c + dx, Math.min(p.rows - 1, r + dy))));
+        if (bord && !s[r * cols + c]) ok = false;                  // un morceau de bord sans trait
+        if (coeur && s[r * cols + c]) ok = false;                  // le trait a mangé le milieu de la porte
       }
-      return vus / FISSURE.size >= 0.9 && faux <= 2;
+      return ok;
     },
-    echec: (p, n) => n < tailleMinimale(p) ? 'trop petite : trop de faux contours' : 'trop grande : le contour de la porte a disparu',
-    ok: "✔ Le contour d'une porte secrète apparaît !"
+    echec: () => 'trop grande : le trait recouvre toute la porte',
+    ok: "✔ Le contour de la porte secrète apparaît !"
   },
   brouillard: {
     hazard: 'chute',
@@ -107,15 +109,16 @@ const filtreDisponible = nom => { const b = document.querySelector(`#col-d .outi
 
 /* ---------- Les couleurs des pixels de ces pièges : des nombres, donc des dégradés (foncé = 0, clair = 1) ---------- */
 function couleurPixel(p, v, op) {
-  const A = [27, 18, 51], B = op === 'laplace3' ? [255, 170, 120] : [243, 230, 180];
-  const k = op === 'laplace3' ? Math.min(1, v / 0.1) : Math.max(0, Math.min(1, v));                   // contours : la force du bord ; sinon la luminosité
+  const trait = op === 'laplace3' || op === 'contour', A = [27, 18, 51], B = trait ? [255, 170, 120] : [243, 230, 180];
+  const k = trait ? Math.min(1, v / 0.1) : Math.max(0, Math.min(1, v));                   // contours : la force du bord ; sinon la luminosité
   return `rgb(${Math.round(A[0] + (B[0] - A[0]) * k)},${Math.round(A[1] + (B[1] - A[1]) * k)},${Math.round(A[2] + (B[2] - A[2]) * k)})`;
 }
 function opAffichee(p, c, r, figee) {                    // l'opération qui a produit la valeur qu'on voit (pour choisir la couleur)
   const ops = FILTRES[p.outil];
   if (figee || p.etat === 'resolu') return ops[ops.length - 1];
   if (p.etat === 'actif') return null;
-  const a = p.anim; return c * p.rows + r < a.k ? ops[a.ph] : (a.ph > 0 ? ops[a.ph - 1] : null);
+  const a = p.anim, fait = a.manuel ? a.fait[r * p.cols + c] : c * p.rows + r < a.k;      // atelier : cases faites par l'enfant ; sinon : l'ordre automatique (colonne par colonne)
+  return fait ? ops[a.ph] : (a.ph > 0 ? ops[a.ph - 1] : null);
 }
 
 /* ---------- Le dessin de chaque obstacle ---------- */

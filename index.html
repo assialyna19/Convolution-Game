@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>La Quête des Lunettes Magiques</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Cinzel+Decorative:wght@700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body class="accueil">
 <div id="scene">
   <aside id="col-g" aria-label="Taille de la carte">
     <div id="fenetres" role="group" aria-label="Taille de la carte magique">
-      <button class="fen-btn" data-n="3" aria-pressed="false" title="Petite carte (touche T pour changer)"><span class="plaque">Petite</span><div class="fen-grille"></div><small class="fen-cout"></small></button>
-      <button class="fen-btn" data-n="5" aria-pressed="false" title="Carte moyenne (touche T pour changer)"><span class="plaque">Moyenne</span><div class="fen-grille"></div><small class="fen-cout"></small></button>
-      <button class="fen-btn" data-n="7" aria-pressed="false" title="Carte suprême (touche T pour changer)"><span class="plaque">Suprême</span><div class="fen-grille"></div><small class="fen-cout"></small></button>
+      <button class="fen-btn" data-n="3" aria-pressed="false" title="Petite carte (touche T pour changer)"><span class="plaque">Petite</span><div class="fen-grille"></div><b class="fen-taille">3×3</b><small class="fen-cout"></small></button>
+      <button class="fen-btn" data-n="5" aria-pressed="false" title="Carte moyenne (touche T pour changer)"><span class="plaque">Moyenne</span><div class="fen-grille"></div><b class="fen-taille">5×5</b><small class="fen-cout"></small></button>
+      <button class="fen-btn" data-n="7" aria-pressed="false" title="Carte suprême (touche T pour changer)"><span class="plaque">Suprême</span><div class="fen-grille"></div><b class="fen-taille">7×7</b><small class="fen-cout"></small></button>
     </div>
   </aside>
 <!-- L'écran de jeu : le canvas + l'interface par-dessus -->
@@ -28,6 +28,12 @@
   </div>
   <div id="bulle" role="status"></div>
   <div id="bandeau" role="status"></div>
+  <!-- L'atelier : la fenêtre où l'enfant fait glisser lui-même sa carte (voir atelier.js) -->
+  <div id="atelier" aria-label="Atelier de la carte magique">
+    <div class="atelier-tete"><span id="atelier-titre"></span><button class="btn-petit" id="atelier-auto" title="La carte finit toute seule (touche E)">✨ Auto</button></div>
+    <canvas id="atelier-canvas" width="300" height="236"></canvas>
+    <div class="atelier-barre"><i id="atelier-progres"></i></div>
+  </div>
   <div id="btns-jeu">
     <button class="btn-rond" id="btn-son" aria-label="Activer ou couper le son" title="Son (touche M)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="hp" d="M4 9.5v5h3.8L13 18.6V5.4L7.8 9.5z"/><path class="ondes" d="M16 9a4.2 4.2 0 010 6M18.6 6.4a8 8 0 010 11.2"/><path class="barre" d="M16.2 9.4l5 5.2M21.2 9.4l-5 5.2"/></svg></button>
     <button class="btn-rond" id="btn-pause" aria-label="Pause" title="Pause (touche Échap ou P)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.2" y="5" width="4" height="14" rx="1.2"/><rect x="13.8" y="5" width="4" height="14" rx="1.2"/></svg></button>
@@ -81,9 +87,9 @@
       <p class="aide-but">🎯 <b>Le but :</b> traverser 5 mondes pour sauver la princesse. Pour avancer, il faut franchir des pièges avec des <b>filtres magiques</b>.</p>
       <ol class="aide-etapes">
         <li><b>👓 Mets tes lunettes</b> (touche L) : tu vois le piège comme une grille de petits carrés.</li>
-        <li><b>🃏 Choisis la taille de ta carte</b> (colonne de gauche) : <b>petite</b>, <b>moyenne</b> ou <b>suprême</b>. C'est elle qui va glisser sur les carrés.</li>
+        <li><b>🃏 Choisis la taille de ta carte</b> (colonne de gauche) : <b>petite 3×3</b>, <b>moyenne 5×5</b> ou <b>suprême 7×7</b>. 🧩 Avant chaque piège, un <b>petit calcul</b> te dit laquelle prendre !</li>
         <li><b>✨ Choisis ton filtre</b> (colonne de droite) : chaque filtre a son pouvoir, lis l'encadré INFO !</li>
-        <li><b>Appuie sur E</b> : le filtre glisse <b>doucement</b>, carré par carré. Puis le chevalier avance tout seul dans le passage !</li>
+        <li><b>Appuie sur E</b> : ta carte se pose sur le piège. <b>Regarde les cases sous ta carte</b> et devine ce que devient la case <b>❓</b> (boutons ou flèches ← →). <b>À chaque réponse, ta carte construit un morceau du piège</b> ! Puis le chevalier avance tout seul.</li>
       </ol>
       <p class="aide-danger">💔 <b>Attention :</b> si tu choisis la mauvaise taille de carte ou le mauvais filtre, le chevalier avance quand même… et il perd une vie ! Réfléchis bien avant d'appuyer sur E.</p>
       <div class="aide-regles">
@@ -194,22 +200,23 @@
   }, true);
 })();
 </script>
-<script src="convolution.js?v=12"></script>
+<script src="convolution.js?v=20"></script>
 <script src="filtres.js?v=12"></script>
 <script src="son.js?v=12"></script>
 <script src="niveaux.js?v=12"></script>
 <script src="stats.js?v=12"></script>
 <script src="accueil.js?v=12"></script>
 <script src="intro.js?v=12"></script>
-<script src="tuto.js?v=12"></script>
+<script src="tuto.js?v=14"></script>
 <script src="princesse.js?v=12"></script>
-<script src="pieges.js?v=12"></script>
-<script src="pieges2.js?v=12"></script>
-<script src="matrices.js?v=13"></script>
+<script src="pieges.js?v=14"></script>
+<script src="pieges2.js?v=20"></script>
+<script src="atelier.js?v=20"></script>
+<script src="quiz.js?v=18"></script>
 <script src="monde.js?v=12"></script>
 <script src="humains.js?v=12"></script>
 <script src="decor.js?v=12"></script>
 <script src="prince.js?v=12"></script>
-<script src="jeu.js?v=12"></script>
+<script src="jeu.js?v=18"></script>
 </body>
 </html>

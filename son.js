@@ -7,7 +7,7 @@
    ===================================================== */
 const Son = (() => {
   let ctx = null, master, musique, effets, envoiReverb, bruitBuf, minuteur, theme = null, mesure = 0, prochaine = 0, actif = true;
-  try { actif = localStorage.getItem('quete-son') !== '0'; } catch (e) { /* tant pis */ }
+  try { actif = localStorage.getItem('quete-son') !== '0'; } catch (e) {}
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);                                // numéro de note MIDI -> fréquence en Hz
 
   // Une ambiance par niveau : racine = note de base, echelle = notes de l'arpège, accords = suite d'accords (en demi-tons)
@@ -68,7 +68,7 @@ const Son = (() => {
     while (prochaine < ctx.currentTime + 1.0) { jouerMesure(T, prochaine, barre); prochaine += barre; mesure++; }
   }
 
-  function jouer(nom) {                                          // les bruitages
+  function jouer(nom) {
     if (!ctx || !actif) return;
     const t = ctx.currentTime;
     switch (nom) {
@@ -95,7 +95,7 @@ const Son = (() => {
   function debloquer() { init(); if (ctx && ctx.state === 'suspended') ctx.resume(); }
   function majBouton() { const b = document.getElementById('btn-son'); if (b) { b.classList.toggle('muet', !actif); b.title = actif ? 'Couper le son (touche M)' : 'Remettre le son (touche M)'; } }   // l'icône change par le style (barre sur le haut-parleur)
   function basculer() {
-    actif = !actif; try { localStorage.setItem('quete-son', actif ? '1' : '0'); } catch (e) { /* tant pis */ }
+    actif = !actif; try { localStorage.setItem('quete-son', actif ? '1' : '0'); } catch (e) {}
     debloquer(); if (master) master.gain.setTargetAtTime(actif ? 0.9 : 0, ctx.currentTime, 0.05); majBouton();
   }
   return { musique: changerTheme, jouer, debloquer, basculer, majBouton, _planifier: planifier, _init: init };

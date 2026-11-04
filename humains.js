@@ -45,7 +45,7 @@ function creerHumains() {
 }
 
 /* ---------- Logique ---------- */
-function tirer() {                                       // un nuage de vapeur part de la bouche du pistolet
+function tirer() {
   heros.tirT = performance.now(); Son.jouer('vapeur');
   vapeurs.push({ x: heros.x + heros.sens * 68, y: heros.y - 92, vx: heros.sens * 520, age: 0 });
 }
@@ -53,7 +53,7 @@ function humainAScanner() {                             // l'humain malade le pl
   const l = humains.filter(q => q.etat === 'malade' && !q.vuln && q.scan.etat !== 'anim' && Math.abs(q.x - heros.x) < 650);
   return l.sort((a, b) => Math.abs(a.x - heros.x) - Math.abs(b.x - heros.x))[0];
 }
-function lancerScan(h) {                                // la fenêtre glisse sur le scan
+function lancerScan(h) {
   const sc = h.scan, n = tailleFenetre, ev = evalScan(sc.g, n, sc.cx, sc.cy);
   sc.anim = { k: 0, acc: 0, n, ev }; sc.s = ev.s; sc.etat = 'anim';
 }
@@ -69,7 +69,7 @@ function majScan(h, dt) {
     }
   } else if (sc.etat === 'echec' && performance.now() - sc.tFin > 3500) sc.etat = 'bruit';
 }
-function expliquerScan(h, n, ok) {                      // le panneau d'explication : on compare la fenêtre à la taille du point faible
+function expliquerScan(h, n, ok) {
   const c = h.scan.coeur;
   const texte = ok ? `Ta carte (${n}) a la même taille que le point faible (${c}) : elle le fait ressortir au milieu du bruit.`
     : n < c ? `Ta carte (${n}) est plus petite que le point faible (${c}) : les petites taches de bruit ressortent autant que lui.`
@@ -77,7 +77,7 @@ function expliquerScan(h, n, ok) {                      // le panneau d'explicat
   elExplication.innerHTML = `<h3>${ok ? '✔ Point faible trouvé !' : '✘ On ne voit pas bien le point faible'}</h3>${ligneEx('Le point faible', c, 'ex-coeur')}${ligneEx('Ta carte', n, 'ex-fen')}<p>${texte}</p>`;
   elExplication.classList.add('visible'); clearTimeout(minuteurExpl); minuteurExpl = setTimeout(cacherExplication, 13000);
 }
-function absorber(h) {                                  // la vapeur est arrêtée par la bulle de spores
+function absorber(h) {
   h.bouclierT = performance.now(); Son.jouer('bloc');
   if (performance.now() - h.msgT > 3000) { h.msgT = performance.now(); montrerBulle("Les spores bloquent la vapeur ! Cherche d'abord son point faible : lunettes (L), Brume (1), puis E."); }
 }
@@ -88,8 +88,8 @@ function guerir(h) {
 function mourirHumain(h) {
   perdreVie();
   heros.vx = 0; heros.vy = 0; heros.y = SOL_Y; heros.auSol = true; heros.tombe = false; heros.enfonce = 0;
-  if (vies <= 0) { recommencerNiveau(); return; }       // plus de vies : le niveau recommence
-  humains.forEach(x => { if (x.etat === 'malade') { x.x = x.x0; x.alerte = false; x.meter = 0; x.vuln = false; x.scan.etat = 'bruit'; x.scan.anim = null; } });   // les humains reviennent à leur place
+  if (vies <= 0) { recommencerNiveau(); return; }
+  humains.forEach(x => { if (x.etat === 'malade') { x.x = x.x0; x.alerte = false; x.meter = 0; x.vuln = false; x.scan.etat = 'bruit'; x.scan.anim = null; } });
   heros.x = Math.max(120, h.x0 - 600);
   montrerBulle("Contaminé ! Choisis le Pistolet à vapeur (touche 4) et tire avec E avant qu'il ne t'atteigne !");
 }
@@ -98,9 +98,9 @@ function majHumains(dt) {
   const appui = veut('action') && !actionH;              // appui "neuf" sur E
   actionH = veut('action');
   if (appui && outilActif === 'vapeur' && performance.now() - (heros.tirT || -1e9) > 550) tirer();
-  if (appui && outilActif === 'flou' && lunettes) { const cible = humainAScanner(); if (cible) lancerScan(cible); }     // le Flou lance le scan sur l'humain le plus proche   // une seconde entre deux tirs, environ
+  if (appui && outilActif === 'flou' && lunettes) { const cible = humainAScanner(); if (cible) lancerScan(cible); }     // le Flou lance le scan sur l'humain le plus proche
   vapeurs.forEach(v => { v.x += v.vx * dt; v.age += dt; });
-  vapeurs = vapeurs.filter(v => {                        // la vapeur touche-t-elle un humain malade ?
+  vapeurs = vapeurs.filter(v => {
     if (v.age > 0.9) return false;
     const rayon = 10 + v.age * 30, h = humains.find(q => q.etat === 'malade' && Math.abs(v.x - q.x) < 30 + rayon);
     if (h) { if (h.vuln) guerir(h); else absorber(h); return false; }          // seul un humain démasqué peut être soigné
@@ -110,7 +110,7 @@ function majHumains(dt) {
     if (h.etat === 'soigne') { h.cure = Math.min(1, h.cure + dt * 0.8); return; }
     majScan(h, dt);
     const d = Math.abs(h.x - heros.x);
-    if (d < 520 && !h.alerte) { h.alerte = true; Son.jouer('contamine'); }                        // il se réveille quand le chevalier est proche
+    if (d < 520 && !h.alerte) { h.alerte = true; Son.jouer('contamine'); }
     if (h.alerte) {
       const dir = Math.sign(heros.x - h.x) || 1; h.sens = dir;
       if (d > 30) { h.x += dir * VIT_HUMAIN * dt; h.ph += VIT_HUMAIN * dt * 0.05; }
@@ -219,7 +219,7 @@ function dessinerHumains(t) {
   });
 }
 
-function dessinerVapeur(t) {                             // les nuages de vapeur tirés par le pistolet
+function dessinerVapeur(t) {
   vapeurs.forEach(v => {
     const sx = v.x - camX, rayon = 10 + v.age * 30, a = 1 - v.age / 0.9;
     for (let k = 0; k < 5; k++) {

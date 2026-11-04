@@ -47,13 +47,13 @@ const ENTRAINEMENT = { nom: 'Entraînement', theme: 'lucioles', difficulte: 'San
   lecon: "Tu sais maintenant choisir ta carte : <b>plus l'obstacle est grand, plus la carte doit être grande</b> !" };
 
 let niveauIdx = 0, niveauActuel = NIVEAUX[0], ecranOuvert = false;
-let porte = { etat: 'fermee', t: 0 };                  // la porte de fin : fermee -> ouvre (les battants s'écartent) -> entree (le chevalier se fond dans la lumière) -> fin       // niveauIdx = -1 : l'entraînement
+let porte = { etat: 'fermee', t: 0 };                  // la porte de fin : fermee -> ouvre (les battants s'écartent) -> entree (le chevalier se fond dans la lumière) -> fin
 const decors = {};                                       // un décor par niveau, fabriqué une seule fois
 const elBandeau = document.getElementById('bandeau'), elEcran = document.getElementById('ecran'), elNiveau = document.getElementById('niveau');
 let minuteurBandeau;
 
 function chargerNiveau(i) {
-  niveauIdx = i; const niv = i < 0 ? ENTRAINEMENT : NIVEAUX[i]; niveauActuel = niv; Son.musique(niv.theme);          // une musique par niveau
+  niveauIdx = i; const niv = i < 0 ? ENTRAINEMENT : NIVEAUX[i]; niveauActuel = niv; Son.musique(niv.theme);
   PIEGES = niv.pieges; HUMAINS = HUMAINS_ACTIFS ? niv.humains : []; VIT_HUMAIN = niv.vitHumain; CONTACT_TEMPS = niv.contact; SCAN_COEUR = niv.scan.coeur; SCAN_BRUIT = niv.scan.bruit; LONGUEUR_NIVEAU = niv.longueur;
   if (!decors[i]) { decors[i] = construireDecor(niv); decors[i].terre = TERRE; decors[i].herbe = HERBE; }
   decor = decors[i]; TERRE = decor.terre; HERBE = decor.herbe;
@@ -65,12 +65,12 @@ function chargerNiveau(i) {
   elNiveau.textContent = niv.entrainement ? 'Entraînement' : 'Niv. ' + (i + 1) + '/' + NIVEAUX.length;
   elEcran.classList.remove('ouvert'); ecranOuvert = false; ecranPerdu = false; Stats.nouveauNiveau();
   cacherExplication();
-  if (!accueilOuvert && !introOuvert) { let conseil = ''; if (i === 0) { try { if (localStorage.getItem('quete-entrainement-fait') !== '1') conseil = '<br><small>💡 Pas sûr de toi ? Essaie d\'abord l\'Entraînement (dans le menu)</small>'; } catch (e) { /* tant pis */ } }
+  if (!accueilOuvert && !introOuvert) { let conseil = ''; if (i === 0) { try { if (localStorage.getItem('quete-entrainement-fait') !== '1') conseil = '<br><small>💡 Pas sûr de toi ? Essaie d\'abord l\'Entraînement (dans le menu)</small>'; } catch (e) {} }
   elBandeau.innerHTML = niv.entrainement ? '<b>Entraînement</b> · aucune vie à perdre<br><small>Apprends à choisir la bonne taille de carte</small>' : '<b>Niveau ' + (i + 1) + '</b> · ' + niv.nom + '<br><small>Difficulté : ' + niv.difficulte + '</small>' + conseil;
   elBandeau.classList.add('visible'); clearTimeout(minuteurBandeau); minuteurBandeau = setTimeout(() => elBandeau.classList.remove('visible'), 3800); }
 }
 let ecranPerdu = false;                                  // l'écran affiché est celui de la défaite
-function recommencerNiveau() {                           // plus de vies : un vrai écran « perdu », avec un conseil
+function recommencerNiveau() {
   ecranOuvert = true; ecranPerdu = true; cacherExplication(); Son.jouer('perdu');
   document.getElementById('ecran-titre').textContent = 'Oh non… plus de vies !';
   document.getElementById('ecran-etoiles').textContent = '☆☆☆';
@@ -82,13 +82,13 @@ function recommencerNiveau() {                           // plus de vies : un vr
 function finNiveau() {
   ecranOuvert = true; ecranPerdu = false; cacherExplication(); Son.jouer('fin');
   const niv = niveauActuel, dernier = !niv.entrainement && niveauIdx === NIVEAUX.length - 1, s = Math.floor(temps);
-  if (niv.entrainement) { try { localStorage.setItem('quete-entrainement-fait', '1'); } catch (e) { /* tant pis */ } } else sauverProgres(niveauIdx + 1);      // le niveau suivant se débloque
+  if (niv.entrainement) { try { localStorage.setItem('quete-entrainement-fait', '1'); } catch (e) {} } else sauverProgres(niveauIdx + 1);
   document.getElementById('ecran-titre').textContent = niv.entrainement ? 'Entraînement terminé ! 🎓' : dernier ? 'La princesse est sauvée ! 👑' : 'Niveau terminé !';
   document.getElementById('ecran-etoiles').textContent = niv.entrainement ? '★★★' : '★'.repeat(Math.max(1, vies)) + '☆'.repeat(3 - Math.max(1, vies));
   const sm = Stats.resumePartie(), mn = Math.floor(s / 60), sec = s % 60;
   const duree = mn > 0 ? mn + ' min' + (sec ? ' ' + sec + ' s' : '') : sec + ' s';                   // « 2 min », pas « Temps : 2 min »
   const puces = [duree];
-  if (!niv.entrainement) puces.push('❤️'.repeat(vies) + '🤍'.repeat(3 - vies), `🪙 ${nbPieces}`, `💎 ${tresors}/${coffres.length}`);       // les vies en cœurs, les pièces et les trésors avec leur émoji
+  if (!niv.entrainement) puces.push('❤️'.repeat(vies) + '🤍'.repeat(3 - vies), `🪙 ${nbPieces}`, `💎 ${tresors}/${coffres.length}`);
   puces.push(`🎯 ${sm.parfaits}/${sm.total}`);
   document.getElementById('ecran-texte').innerHTML = `<div class="ecran-stats">${puces.map(x => `<span>${x}</span>`).join('')}</div><span class="lecon">${niv.lecon}</span>`;
   document.getElementById('ecran-suivant').textContent = niv.entrainement ? 'Jouer le niveau 1 ▶' : dernier ? '↺ Recommencer' : 'Niveau suivant ▶';
@@ -98,9 +98,9 @@ function majNiveau(dt) {
   if (ecranOuvert) return;
   const finale = !!niveauActuel.final, butee = LONGUEUR_NIVEAU - (finale ? 80 : 4);          // où le chevalier s'arrête dans l'embrasure
   if (porte.etat === 'fermee') {
-    if (heros.x >= LONGUEUR_NIVEAU - 320 && !animationEnCours()) {                           // il approche : la porte s'ouvre toute seule
+    if (heros.x >= LONGUEUR_NIVEAU - 320 && !animationEnCours()) {
       porte = { etat: 'ouvre', t: 0 }; Son.jouer('succes'); cacherExplication();
-      heros.auto = { cible: butee, apres: performance.now() + 1900 };                          // et il marche vers la lumière, quand les battants sont ouverts
+      heros.auto = { cible: butee, apres: performance.now() + 1900 };
     }
   } else if (porte.etat === 'ouvre') {
     porte.t += dt;
@@ -108,7 +108,7 @@ function majNiveau(dt) {
     else if (!heros.auto) heros.auto = { cible: butee, apres: 0 };
   } else if (porte.etat === 'entree') {
     porte.t += dt;
-    if (porte.t >= 1.7) { porte.etat = 'fin'; finNiveau(); }                                 // il a disparu : l'écran de fin s'affiche
+    if (porte.t >= 1.7) { porte.etat = 'fin'; finNiveau(); }
   }
 }
 elEcran.addEventListener('click', e => {
@@ -128,7 +128,7 @@ elEcran.addEventListener('click', e => {
 const PORTE_L = 176, PORTE_H = 280;                     // largeur et hauteur de l'arche
 const lisse = x => x * x * (3 - 2 * x);                 // démarrage et arrivée en douceur
 const hasard = k => { const v = Math.sin(k * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };   // un « hasard » toujours le même pour un k donné
-function etoile4(x, y, r, a) {                          // petite étoile à 4 branches, brillante
+function etoile4(x, y, r, a) {
   ctx.beginPath(); ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r); ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r);
   ctx.fillStyle = `rgba(255,248,215,${a})`; ctx.fill();
 }
@@ -151,7 +151,7 @@ function battant(sx, y, W, H, ouv) {                    // les deux battants, de
     ctx.restore();
   });
 }
-function dessinerPortail(t) {                            // le portail de sortie du niveau
+function dessinerPortail(t) {
   const sx = LONGUEUR_NIVEAU - camX;
   if (sx < -320 || sx > W + 320) return;
   const tt = t / 1000, y = SOL_Y + 8, W2 = PORTE_L, H2 = PORTE_H, pulse = 0.5 + 0.5 * Math.sin(tt * 2.2);
@@ -225,7 +225,7 @@ function dessinerPortail(t) {                            // le portail de sortie
     ctx.restore();
   }
 }
-function dessinerDisparition(t) {                        // le chevalier se dissout dans la lumière de la porte
+function dessinerDisparition(t) {
   if (porte.etat !== 'entree') return;
   const k = Math.min(1, porte.t / 1.6), tt = t / 1000, hx = heros.x - camX, hy = heros.y - 50;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';

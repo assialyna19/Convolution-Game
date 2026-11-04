@@ -7,7 +7,7 @@
    Tout est fabriqué automatiquement pour chaque niveau (creerMonde) à partir de la place libre entre les pièges.
    ===================================================== */
 const COUT_CARTE = { 3: 1, 5: 2, 7: 3 };                // le prix de chaque taille de carte, en pièces
-const VALEUR_COFFRE = 5;                                 // un trésor rapporte 5 pièces
+const VALEUR_COFFRE = 5;
 let pieces = [], coffres = [], rochers = [], plateformes = [], nbPieces = 0, tresors = 0;
 const elPieces = document.getElementById('pieces');
 
@@ -43,7 +43,7 @@ function creerMonde(niv) {
       [-45, 0, 45].forEach(dx => ajPiece(cx + dx, SOL_Y - 115 - 32));
       [-30, 30].forEach(dx => ajPiece(cx + 225 + dx * 2.2, SOL_Y - 225 - 34));
     }
-    for (let x = a + 120; x < b - 160; x += 420 + Math.round(r() * 120)) for (let i = 0; i < 4; i++) {     // des petits groupes de pièces sur la route
+    for (let x = a + 120; x < b - 160; x += 420 + Math.round(r() * 120)) for (let i = 0; i < 4; i++) {
       const px = x + i * 54; if (!bloque.some(([p0, p1]) => px > p0 && px < p1)) ajPiece(px, SOL_Y - 30);
     }
   });

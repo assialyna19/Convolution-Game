@@ -79,7 +79,7 @@ function arbreMort(g, seed, x, base, h, dx, grosseur = 0.07, couleurs, couleurBr
   if (tonsF) amas.forEach(([cx, cy]) => feuillage(g, cx, cy, 20, 14, 22, tonsF, r));
   g.restore();
 }
-function racines(g, x, base, w0, dx, couleur) {            // des racines épaisses qui s'étalent au pied d'un gros tronc
+function racines(g, x, base, w0, dx, couleur) {
   g.save(); g.translate(dx, 0); g.strokeStyle = couleur; g.lineCap = 'round';
   [-2, -1, 1, 2].forEach(k => { g.lineWidth = w0 * 0.2; g.beginPath(); g.moveTo(x + k * w0 * 0.22, base - w0 * 0.7); g.quadraticCurveTo(x + k * w0 * 0.55, base - 6, x + k * (w0 * 0.95 + 26), base + 5); g.stroke(); });
   g.restore();
@@ -99,7 +99,7 @@ function murBriques(g, x0, y0, w, h, c0, c1, seed) {          // un mur de briqu
     }
   }
 }
-function pathArche(g, x, base, w, h) {                         // arche gothique pointue
+function pathArche(g, x, base, w, h) {
   g.beginPath(); g.moveTo(x - w / 2, base); g.lineTo(x - w / 2, base - h * 0.55);
   g.quadraticCurveTo(x - w / 2, base - h * 0.92, x, base - h); g.quadraticCurveTo(x + w / 2, base - h * 0.92, x + w / 2, base - h * 0.55);
   g.lineTo(x + w / 2, base); g.closePath();
@@ -129,7 +129,7 @@ function colonne(g, seed, x, base, h, w, dx, casse, pierre) {
   if (casse) { g.fillStyle = cap; [[-w * 1.1, 22, 20], [w * 0.7, 14, 12]].forEach(([ox, a, b]) => g.fillRect(x + ox, base - b, a, b)); }   // blocs tombés
   g.restore();
 }
-function vitrail(g, x, base, w, h, col, dx) {                 // verrière : verre coloré, plombs noirs, lueur
+function vitrail(g, x, base, w, h, col, dx) {
   g.save(); g.translate(dx, 0);
   pathArche(g, x, base, w, h); g.save(); g.clip();
   g.fillStyle = deg(g, 0, base - h, 0, base, [[0, rgbC(mixC(col, [255, 255, 255], 0.25))], [0.5, rgbC(col)], [1, rgbC(mixC(col, [0, 0, 0], 0.55))]]); g.fillRect(x - w, base - h, w * 2, h);
@@ -247,7 +247,7 @@ function construireSol(g, s, r) {
   g.strokeStyle = 'rgba(10,6,3,0.35)'; g.lineWidth = 1;
   for (let i = 0; i < 16; i++) { let x = r() * P, y = SOL_Y + 10 + r() * 60; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 5; k++) { x += 6 + r() * 10; y += (r() - 0.5) * 8; g.lineTo(x, y); } g.stroke(); }
 }
-function herbeSeche(g, r, couleurs, hmax, pas) {               // brins d'herbe courbés
+function herbeSeche(g, r, couleurs, hmax, pas) {
   g.lineCap = 'round';
   for (let pass = 0; pass < 2; pass++) for (let x = 0; x < P; x += pas) {
     const h = (pass ? 4 : 7) + r() * (pass ? hmax * 0.6 : hmax), lean = (r() - 0.5) * 12, y0 = SOL_Y + 2 + pass * 3;
@@ -281,7 +281,7 @@ function fleurLum(g, x, base, s, col, dx) {                  // une fleur qui br
   g.fillStyle = '#fffbe0'; g.beginPath(); g.arc(x + s, base - 16 * s, 1.3 * s, 0, T2); g.fill();
   g.restore();
 }
-function roseau(g, x, base, h, dx) {                         // un roseau : tige + épi brun
+function roseau(g, x, base, h, dx) {
   g.save(); g.translate(dx, 0); g.lineCap = 'round';
   g.strokeStyle = '#1a1230'; g.lineWidth = 2.6; g.beginPath(); g.moveTo(x, base); g.quadraticCurveTo(x + 6, base - h * 0.5, x + 2, base - h); g.stroke();
   g.fillStyle = deg(g, x - 4, 0, x + 6, 0, [[0, '#1a0f10'], [0.6, '#4a2a22'], [1, '#7a4a38']]); g.beginPath(); g.ellipse(x + 2, base - h - 10, 4.2, 14, 0.05, 0, T2); g.fill();
@@ -295,13 +295,13 @@ function torche(g, x, y, dx, feux, v) {                      // une torche accro
   g.fillStyle = deg(g, x - 8, 0, x + 8, 0, [[0, '#2a1810'], [0.6, '#7a5a30'], [1, '#3a2418']]); g.beginPath(); g.moveTo(x - 8, y - 6); g.lineTo(x + 8, y - 6); g.lineTo(x + 5, y + 6); g.lineTo(x - 5, y + 6); g.closePath(); g.fill();
   g.restore(); feux.push({ x: x + dx, y: y - 6, v, petit: true });
 }
-function toileAraignee(g, x, y, r, dx, sens) {                // une toile d'araignée dans un coin
+function toileAraignee(g, x, y, r, dx, sens) {
   g.save(); g.translate(x + dx, y); g.scale(sens, 1); g.strokeStyle = 'rgba(220,210,240,0.35)'; g.lineWidth = 1;
   for (let k = 0; k <= 6; k++) { const a = k * Math.PI / 12; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * r, Math.sin(a) * r); g.stroke(); }
   for (let j = 1; j <= 5; j++) { g.beginPath(); g.arc(0, 0, r * j / 5, 0, Math.PI / 2); g.stroke(); }
   g.restore();
 }
-function archeBarreaux(g, x, base, w, h, dx) {               // une arche ronde fermée par une grille de fer, dans un mur de pierre
+function archeBarreaux(g, x, base, w, h, dx) {
   g.save(); g.translate(dx, 0);
   const rc = w / 2, cy = base - h + rc;
   g.beginPath(); g.moveTo(x - rc, base); g.lineTo(x - rc, cy); g.arc(x, cy, rc, Math.PI, 0); g.lineTo(x + rc, base); g.closePath();
@@ -317,7 +317,7 @@ function archeBarreaux(g, x, base, w, h, dx) {               // une arche ronde 
   for (let a = Math.PI; a < Math.PI * 2; a += 0.22) { g.beginPath(); g.moveTo(x + Math.cos(a) * (rc), cy + Math.sin(a) * rc); g.lineTo(x + Math.cos(a) * (rc + 20), cy + Math.sin(a) * (rc + 20)); g.stroke(); }
   g.restore();
 }
-function lancette(g, x, base, w, h, cols, r) {                // une fenêtre étroite à vitrail : mosaïque de verres colorés, plombs noirs
+function lancette(g, x, base, w, h, cols, r) {
   pathArche(g, x, base, w, h); g.save(); g.clip();
   const lignes = 9, c = 4;
   for (let gy = 0; gy < lignes; gy++) for (let gx = 0; gx < c; gx++) {
@@ -331,7 +331,7 @@ function lancette(g, x, base, w, h, cols, r) {                // une fenêtre é
   for (let gx = 0; gx <= c; gx++) { g.moveTo(x - w / 2 + gx * w / c, base - h); g.lineTo(x - w / 2 + gx * w / c, base); } g.stroke();
   g.restore();
 }
-function vitrailRiche(g, x, base, w, h, cols, seed, dx) {      // une grande verrière gothique : deux fenêtres + une rosace, comme dans une cathédrale
+function vitrailRiche(g, x, base, w, h, cols, seed, dx) {
   const r = R(seed); g.save(); g.translate(dx, 0);
   const lw = w * 0.46, gap = w * 0.08;
   g.fillStyle = '#06060e'; pathArche(g, x, base, w, h); g.fill();
@@ -346,7 +346,7 @@ function vitrailRiche(g, x, base, w, h, cols, seed, dx) {      // une grande ver
   g.globalCompositeOperation = 'lighter'; const lu = g.createRadialGradient(x, base - h * 0.5, 0, x, base - h * 0.5, h * 0.85); lu.addColorStop(0, rgbC(cols[0], 0.28)); lu.addColorStop(1, rgbC(cols[0], 0));
   g.fillStyle = lu; g.fillRect(x - h, base - h * 1.4, h * 2, h * 1.8); g.restore();
 }
-function pagode(g, x, base, s, dx, col) {                      // une silhouette de pagode, avec ses fenêtres allumées
+function pagode(g, x, base, s, dx, col) {
   g.save(); g.translate(dx, 0); g.fillStyle = col;
   for (let k = 0; k < 3; k++) {
     const w = (70 - k * 16) * s, y = base - k * 30 * s;
@@ -357,7 +357,7 @@ function pagode(g, x, base, s, dx, col) {                      // une silhouette
   g.fillRect(x - 1.5 * s, base - 120 * s, 3 * s, 32 * s);
   g.restore();
 }
-function portailRuine(g, x, base, dx) {                        // un portail de pierre ruiné, penché dans l'eau
+function portailRuine(g, x, base, dx) {
   g.save(); g.translate(x + dx, base); g.rotate(-0.22);
   const p = deg(g, -50, 0, 50, 0, [[0, '#2a2044'], [0.5, '#5a4a80'], [1, '#8a7aa8']]);
   g.fillStyle = p; g.fillRect(-46, -190, 22, 190); g.fillRect(24, -190, 22, 190); g.fillRect(-60, -206, 120, 22);

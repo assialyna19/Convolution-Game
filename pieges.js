@@ -85,7 +85,7 @@ elExplication.addEventListener('click', cacherExplication);
 const TONS_BUISSON = ['#0d1a08', '#1f3a14', '#355c20', '#56862c', '#86b84a', '#c2e07a'];   // plus clair et plus jaune que le décor : il doit ressortir
 const TONS_RONCES = ['#140a28', '#2a1650', '#4a2a90', '#7a4ad0', '#b890ff', '#ffc0f0'];
 function nouvelleToile(cell) { const S = Math.round(cell * 1.6), c = document.createElement('canvas'); c.width = c.height = S; return [c, c.getContext('2d'), S]; }
-function spriteBuisson(seed, cell, tons = TONS_BUISSON, epine = '#d8c8a0') {   // une case de végétation épaisse : feuillage dense + épines
+function spriteBuisson(seed, cell, tons = TONS_BUISSON, epine = '#d8c8a0') {
   const [c, g, S] = nouvelleToile(cell), r = R(seed + 7); g.lineCap = 'round';
   for (let i = 0; i < 20; i++) {
     const a = r() * Math.PI * 2, d = S * 0.33, l = 9 + r() * 9;
@@ -99,7 +99,7 @@ function spriteBuisson(seed, cell, tons = TONS_BUISSON, epine = '#d8c8a0') {   /
   }
   return c;
 }
-function spriteTige(seed, cell, tons = TONS_BUISSON, epine = '#d8c8a0') {       // une tige épineuse : fine, tordue, hérissée d'épines
+function spriteTige(seed, cell, tons = TONS_BUISSON, epine = '#d8c8a0') {
   const [c, g, S] = nouvelleToile(cell), r = R(seed + 3); g.lineCap = 'round';
   for (let k = 0; k < 3; k++) {
     const x0 = S / 2 + (k - 1) * 9, f = g.createLinearGradient(x0 - 4, 0, x0 + 4, 0); f.addColorStop(0, tons[0]); f.addColorStop(1, tons[3]);
@@ -110,21 +110,21 @@ function spriteTige(seed, cell, tons = TONS_BUISSON, epine = '#d8c8a0') {       
   feuillage(g, S / 2, S * 0.5, S * 0.22, S * 0.4, 18, tons, r);
   return c;
 }
-function spriteRoseauxVoute(seed, cell) {                                         // un feuillage de roseaux : des lames courbes
+function spriteRoseauxVoute(seed, cell) {
   const [c, g, S] = nouvelleToile(cell), r = R(seed + 5); g.lineCap = 'round';
   for (let i = 0; i < 46; i++) { const x = S * (0.1 + 0.8 * r()), y0 = S * (0.9 + 0.1 * r()), h = S * (0.5 + 0.5 * r()), lean = (r() - 0.5) * S * 0.5;
     const f = g.createLinearGradient(0, y0, 0, y0 - h); f.addColorStop(0, '#0e2a22'); f.addColorStop(1, ['#3a8a6a', '#5ab88a', '#2a6a5a'][i % 3]);
     g.strokeStyle = f; g.lineWidth = 2.4 + r() * 2; g.beginPath(); g.moveTo(x, y0); g.quadraticCurveTo(x + lean * 0.3, y0 - h * 0.6, x + lean, y0 - h); g.stroke(); }
   return c;
 }
-function spriteRoseauxTige(seed, cell) {                                          // des roseaux : une tige et un épi brun
+function spriteRoseauxTige(seed, cell) {
   const [c, g, S] = nouvelleToile(cell), r = R(seed + 6); g.lineCap = 'round';
   for (let k = 0; k < 3; k++) { const x = S * (0.3 + 0.2 * k) + (r() - 0.5) * 6, top = S * (0.12 + 0.18 * r());
     g.strokeStyle = '#1a3a30'; g.lineWidth = 3.2; g.beginPath(); g.moveTo(x, S); g.quadraticCurveTo(x + 6, S * 0.5, x + (r() - 0.5) * 10, top); g.stroke();
     g.fillStyle = deg(g, x - 5, 0, x + 6, 0, [[0, '#2a1410'], [0.6, '#5a3226'], [1, '#8a5a40']]); g.beginPath(); g.ellipse(x + 1, top + 4, 5, 15, 0, 0, Math.PI * 2); g.fill(); }
   return c;
 }
-function spriteToile(seed, cell) {                                                // la grande toile : fils radiaux et concentriques, parfois une araignée
+function spriteToile(seed, cell) {
   const [c, g, S] = nouvelleToile(cell), r = R(seed + 9);
   g.fillStyle = 'rgba(60,50,80,0.35)'; g.beginPath(); g.ellipse(S / 2, S / 2, S * 0.42, S * 0.42, 0, 0, Math.PI * 2); g.fill();
   g.strokeStyle = 'rgba(235,230,250,0.75)'; g.lineWidth = 1.4;
@@ -133,27 +133,27 @@ function spriteToile(seed, cell) {                                              
   if (r() < 0.3) { g.fillStyle = '#0a0612'; g.beginPath(); g.ellipse(S / 2, S / 2, 7, 5, 0, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#0a0612'; g.lineWidth = 1.5; for (let k = -2; k <= 2; k++) { if (!k) continue; g.beginPath(); g.moveTo(S / 2, S / 2); g.lineTo(S / 2 + k * 8, S / 2 - 8 + Math.abs(k) * 4); g.moveTo(S / 2, S / 2); g.lineTo(S / 2 + k * 8, S / 2 + 8 - Math.abs(k) * 4); g.stroke(); } }
   return c;
 }
-function spriteFils(seed, cell) {                                                 // des fils de soie épais, tendus
+function spriteFils(seed, cell) {
   const [c, g, S] = nouvelleToile(cell), r = R(seed + 4); g.lineCap = 'round';
   for (let k = 0; k < 4; k++) { const x = S * (0.22 + 0.19 * k) + (r() - 0.5) * 4; g.strokeStyle = 'rgba(240,236,252,0.85)'; g.lineWidth = 2.4; g.beginPath(); g.moveTo(x, S); g.lineTo(x + (r() - 0.5) * 6, 0); g.stroke();
     g.fillStyle = 'rgba(255,255,255,0.9)'; for (let y = 10; y < S; y += 16) { g.beginPath(); g.arc(x, y, 2.2, 0, Math.PI * 2); g.fill(); } }
   return c;
 }
-function spritePoutre(seed, cell) {                                               // une lourde poutre de métal avec ses rivets
+function spritePoutre(seed, cell) {
   const [c, g, S] = nouvelleToile(cell), h = S * 0.62;
   g.fillStyle = deg(g, 0, S / 2 - h / 2, 0, S / 2 + h / 2, [[0, '#8a8aa0'], [0.4, '#3a3a52'], [1, '#12121e']]); g.fillRect(0, S / 2 - h / 2, S, h);
   g.strokeStyle = 'rgba(0,0,0,0.7)'; g.lineWidth = 2; g.strokeRect(0, S / 2 - h / 2, S, h);
   g.fillStyle = '#b8b8cc'; for (let x = 10; x < S; x += 22) { g.beginPath(); g.arc(x, S / 2 - h / 2 + 8, 2.6, 0, Math.PI * 2); g.arc(x, S / 2 + h / 2 - 8, 2.6, 0, Math.PI * 2); g.fill(); }
   return c;
 }
-function spriteChaine(seed, cell) {                                               // une chaîne qui pend : des maillons
+function spriteChaine(seed, cell) {
   const [c, g, S] = nouvelleToile(cell);
   for (let k = 0; k < 2; k++) { const x = S * (0.34 + 0.32 * k);
     for (let y = 0, i = 0; y < S; y += 14, i++) { g.strokeStyle = deg(g, x - 7, 0, x + 7, 0, [[0, '#2a2a3a'], [0.5, '#c8c8dc'], [1, '#4a4a5c']]); g.lineWidth = 3.4;
       g.beginPath(); if (i % 2) g.ellipse(x, y + 8, 3, 8, 0, 0, Math.PI * 2); else g.ellipse(x, y + 8, 7, 7.5, 0, 0, Math.PI * 2); g.stroke(); } }
   return c;
 }
-const ART_BUISSON = {                                                             // l'apparence du buisson selon la variante : voûte, tiges, souches coupées
+const ART_BUISSON = {
   epines:  { voute: (s, c) => spriteBuisson(s, c), tige: (s, c) => spriteTige(s, c), souche: ['#1a1208', '#4a3a1c', '#6a5a30'] },
   ronces:  { voute: (s, c) => spriteBuisson(s, c, TONS_RONCES, '#f0d8ff'), tige: (s, c) => spriteTige(s, c, TONS_RONCES, '#f0d8ff'), souche: ['#140a28', '#3a2060', '#7a4ad0'] },
   roseaux: { voute: spriteRoseauxVoute, tige: spriteRoseauxTige, souche: ['#0e2a22', '#2a6a5a', '#5ab88a'] },
@@ -183,7 +183,7 @@ function nouveauPiege(d) {
     const groupes = tige === 1 ? [0, 2, 4, 6] : [0, 4, 8];                                                           // colonnes de départ des tiges
     groupes.forEach(gc => { tiges.push(c0 + gc + tige / 2);
       for (let k = 0; k < tige; k++) for (const y of [epais + 1, epais + 2]) { g[y * cols + c0 + gc + k] = 1; tigesIdx.push(y * cols + c0 + gc + k); } });
-    [[0, epais + 2], [cols - 1, epais + 1]].forEach(([x, y]) => g[y * cols + x] = 1);                                // petites broussailles isolées
+    [[0, epais + 2], [cols - 1, epais + 1]].forEach(([x, y]) => g[y * cols + x] = 1);
     zx = d.x + c0 * cell; var zl = span * cell; y0 = SOL_Y - (epais + 3) * cell; zy0 = y0 + cell - 6; zy1 = SOL_Y + 2;
     const estTige = new Set(tigesIdx);
     art = ART_BUISSON[d.skin] || ART_BUISSON.epines;
@@ -202,11 +202,11 @@ function majFenetre() {                                // les 3 cartes de taille
     const n = +b.dataset.n, r = (n - 1) / 2; let html = '';
     for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) html += (Math.abs(x - 3) <= r && Math.abs(y - 3) <= r) ? '<i class="on"></i>' : '<i></i>';
     b.querySelector('.fen-grille').innerHTML = html; b.setAttribute('aria-pressed', n === tailleFenetre);
-    const pc = b.querySelector('.fen-cout'); if (pc) pc.textContent = niveauActuel.entrainement ? 'gratuite' : '🪙 ' + COUT_CARTE[n];      // le prix de la carte
+    const pc = b.querySelector('.fen-cout'); if (pc) pc.textContent = niveauActuel.entrainement ? 'gratuite' : '🪙 ' + COUT_CARTE[n];
   });
 }
 function changerTaille() { tailleFenetre = tailleFenetre === 7 ? 3 : tailleFenetre + 2; majFenetre(); Son.jouer('carte'); }
-document.getElementById('fenetres').addEventListener('click', e => {      // un clic sur une carte choisit directement sa taille
+document.getElementById('fenetres').addEventListener('click', e => {
   const b = e.target.closest('.fen-btn'); if (!b) return;
   tailleFenetre = +b.dataset.n; majFenetre(); Son.jouer('carte'); b.blur();
 });
@@ -223,13 +223,13 @@ function commencerMarche(p, delai = 0) {                  // le chevalier avance
 function essayerFiltre(p) {
   if (!lunettes) return montrerBulle("Tu ne vois pas où viser : mets tes lunettes (touche L) !");
   if (!outilActif) return montrerBulle("Choisis d'abord la taille de ta carte (à gauche), puis ton filtre (à droite) !");
-  if (outilActif !== p.outil) {                           // mauvais filtre : le chevalier avance quand même, et il en subit les conséquences
+  if (outilActif !== p.outil) {
     const o = OUTILS_PIEGE[p.outil];
     montrerBulle(`Mauvais filtre pour ${p.quoi} ! Il fallait ${o.nom} ${o.icone}. Le chevalier avance quand même…`);
     Stats.noter({ niv: niveauIdx, piege: pieges.indexOf(p), type: p.type, filtre: outilActif, attendu: p.outil, carte: tailleFenetre, minimale: tailleMinimale(p), ok: false, cause: 'mauvais_filtre' });
     return commencerMarche(p);
   }
-  if (!niveauActuel.entrainement) {                     // les cartes se paient : plus elle est grande, plus elle coûte cher
+  if (!niveauActuel.entrainement) {
     const cout = COUT_CARTE[tailleFenetre];
     if (nbPieces < cout) { montrerBulle(`Pas assez de pièces : la ${nomCarte(tailleFenetre)} coûte ${cout} 🪙. Les pièces du chemin sont revenues : ramasse-les !`); faireReapparaitre(pieges.indexOf(p)); return; }
     nbPieces -= cout; majPiecesHUD();
@@ -240,12 +240,16 @@ function essayerFiltre(p) {
     const ph = { op, entree, sortie }; entree = sortie; return ph;
   });
   p.sortie = entree;
-  p.anim = { ph: 0, k: 0, acc: 0, pause: 0, n: tailleFenetre, rapide: false }; p.etat = 'anim';   // ...et l'animation les révèle case par case, doucement
+  p.anim = { ph: 0, k: 0, acc: 0, pause: 0, n: tailleFenetre, rapide: false }; p.etat = 'anim';
+  if (typeof atelierPour === 'function' && atelierPour(p)) ouvrirAtelier(p);                      // c'est l'enfant qui fait glisser la carte, dans la fenêtre de droite (atelier.js)
 }
 
 function avancerAnim(p, dt) {
   const a = p.anim, total = p.cols * p.rows, vis = p.type === 'buisson' ? p.rows - 2 : p.rows;
-  if (a.pause > 0) { a.pause -= dt; if (a.pause <= 0) { a.ph++; a.k = 0; a.acc = 0; } return; }
+  if (a.manuel) tenirCamera(p, dt);                       // atelier : la caméra montre le piège à gauche de la fenêtre
+  if (a.pause > 0) { a.pause -= dt; if (a.pause <= 0) { a.ph++; a.k = 0; a.acc = 0; if (a.manuel) atelierNouvelleEtape(p); } return; }
+  if (a.manuel) { if (!majAtelier(p, dt)) return; }       // atelier : l'étape est finie quand l'enfant a passé la carte sur toutes les cases
+  else {
   a.acc += dt * p.vit * (a.rapide ? 4 : 1);               // la vitesse est lente exprès : l'enfant voit chaque pixel changer (E pour accélérer)
   const ph = p.phases[a.ph];
   while (a.k < total) {
@@ -257,17 +261,19 @@ function avancerAnim(p, dt) {
     a.acc -= cout; a.k++; if (!a.rapide) Son.jouer('tick');
   }
   if (a.k < total) return;
-  if (a.ph < p.phases.length - 1) { a.pause = 1.0; return; }   // une pause entre les deux étapes, pour comprendre
-  const nUtilise = a.n, ok = reussi(p), nMin = tailleMinimale(p); p.vueFin = performance.now();
-  Stats.noter({ niv: niveauIdx, piege: pieges.indexOf(p), type: p.type, filtre: p.outil, attendu: p.outil, carte: nUtilise, minimale: nMin, ok, cause: !ok ? (nUtilise > tailleMaximale(p) ? 'echec_trop_grande' : 'trop_petite') : p.type === 'sable' ? 'ok_sable' : nUtilise === nMin ? 'ok_parfait' : 'ok_trop_grande' });       // la vue en pixels s'efface doucement à la fin
+  }
+  if (a.ph < p.phases.length - 1) { a.pause = a.manuel ? 0.6 : 1.0; return; }   // une pause entre les deux étapes, pour comprendre
+  const nUtilise = a.n, ok = reussi(p), nMin = tailleMinimale(p); p.vueFin = a.manuel ? 0 : performance.now();   // atelier : pas de vue en pixels à la fin, on a déjà vu le vrai piège changer
+  Stats.noter({ niv: niveauIdx, piege: pieges.indexOf(p), type: p.type, filtre: p.outil, attendu: p.outil, carte: nUtilise, minimale: nMin, ok, cause: !ok ? (nUtilise > tailleMaximale(p) ? 'echec_trop_grande' : 'trop_petite') : p.type === 'sable' ? 'ok_sable' : nUtilise === nMin ? 'ok_parfait' : 'ok_trop_grande' });
   Son.jouer(ok ? 'succes' : 'echec');
+  if (a.manuel) finAtelier(p, ok);
   if (ok) {
     indicesVus.add(p.type);                             // réussi : on n'affichera plus les indications pour cette sorte de piège
     p.etat = 'resolu'; p.tunnel = p.type === 'buisson' && p.sortie.some(v => v === 1);
     montrerBulle(p.tunnel ? p.tunnelTexte : p.succes);
   } else { p.etat = 'actif'; p.anim = null; p.phases = null; montrerBulle(p.echec); }
-  expliquer(p, nUtilise, ok);                             // et on explique POURQUOI, avec la taille de la carte et celle de l'obstacle
-  commencerMarche(p, 1400);                               // puis le chevalier avance tout seul : si le choix était bon il passe, sinon il en subit les conséquences
+  expliquer(p, nUtilise, ok);
+  commencerMarche(p, 1400);
 }
 function reussiAvec(p, sortie) {
   if (typeof NOUVEAUX !== 'undefined' && NOUVEAUX[p.type]) return NOUVEAUX[p.type].reussi(p, sortie);
@@ -290,6 +296,7 @@ function valeurCase(p, c, r) {                          // valeur à AFFICHER : 
   if (p.etat === 'actif') return p.g[i];
   if (p.etat === 'resolu') return p.sortie[i];
   const ph = p.phases[p.anim.ph];
+  if (p.anim.manuel) return p.anim.fait[i] ? ph.sortie[i] : ph.entree[i];      // atelier : seules les cases où l'enfant a passé la carte ont changé
   return c * p.rows + r < p.anim.k ? ph.sortie[i] : ph.entree[i];
 }
 function surTrou() {                                    // le héros est-il au-dessus d'un trou encore ouvert ? (utilisé par la physique dans jeu.js)
@@ -299,11 +306,11 @@ function surTrou() {                                    // le héros est-il au-d
 function mourir(p) {
   heros.auto = null; faireReapparaitre(pieges.indexOf(p)); perdreVie();
   heros.tombe = false; heros.vx = 0; heros.vy = 0; heros.y = SOL_Y; heros.auSol = true; heros.enfonce = 0;
-  if (vies <= 0) { recommencerNiveau(); return; }       // plus de vies : le niveau recommence
+  if (vies <= 0) { recommencerNiveau(); return; }
   heros.x = Math.max(120, p.zx - 260);                  // point de reprise : juste avant le piège
   montrerBulle(p.mort);
 }
-function epines(p) {                                    // le prince s'est jeté dans les épines
+function epines(p) {
   heros.auto = null; perdreVie(); heros.invulFin = performance.now() + 1600;
   if (vies <= 0) { recommencerNiveau(); return; }
   heros.x = p.zx - 150; heros.vx = -180; heros.vy = -380; heros.auSol = false;
@@ -316,7 +323,7 @@ function majPieges(dt) {
   let dansSable = null;
   heros.ralenti = 1;
   const enCours = pieges.find(p => p.etat === 'anim');
-  if (appui && enCours) enCours.anim.rapide = !enCours.anim.rapide;       // E pendant que le filtre glisse : on accélère / on ralentit
+  if (appui && enCours) { if (enCours.anim.manuel) enCours.anim.auto = true; else enCours.anim.rapide = !enCours.anim.rapide; }   // E pendant le filtre : on accélère (atelier : la carte finit toute seule)
   pieges.forEach(p => {
     if (p.etat === 'anim') avancerAnim(p, dt);
     if (NOUVEAUX[p.type]) majNouveau(p, performance.now() < (heros.invulFin || 0));      // tornade, mur : ils blessent tant qu'ils ne sont pas résolus
@@ -383,7 +390,7 @@ function decorTrou(p, sx, t) {                          // ce qu'on voit au fond
 }
 function dessinerTrou(p, sx, t) {
   if (p.etat === 'resolu') return dessinerCicatrice(p, sx, t);
-  if (p.etat === 'anim') return dessinerVuePixels(p, sx);                     // pendant le filtre : la vue en pixels clairs et foncés
+  if (p.etat === 'anim') return p.anim.manuel ? dessinerTrouAtelier(p, sx) : dessinerVuePixels(p, sx);   // atelier : le vrai trou se bouche ; sinon la vue en pixels
   const anim = p.etat === 'anim', vide = ctx.createLinearGradient(0, SOL_Y, 0, H);
   vide.addColorStop(0, '#04050c'); vide.addColorStop(1, '#000');
   for (let c = 0; c < p.cols; c++) for (let r = anim ? 0 : p.rows - 1; r < p.rows; r++) {
@@ -435,7 +442,7 @@ function dessinerCicatrice(p, sx, t) {                  // le trou a été bouch
   ctx.restore();
 }
 function dessinerBuisson(p, sx, t) {
-  if (p.etat === 'anim') { dessinerVuePixels(p, sx); return; }              // pendant le filtre : la vue en pixels clairs et foncés
+  if (p.etat === 'anim' && !p.anim.manuel) { dessinerVuePixels(p, sx); return; }   // pendant le filtre automatique : la vue en pixels clairs et foncés
                      // chaque case "pleine" affiche son morceau de végétation ; les cases effacées disparaissent
   ctx.save(); ctx.beginPath(); ctx.rect(sx - 80, 0, p.l + 160, SOL_Y + 10); ctx.clip();       // on coupe au niveau du sol
   if (p.etat === 'resolu' && p.tunnel) {                // le tunnel : de l'ombre sous la voûte
@@ -458,7 +465,7 @@ function dessinerBuisson(p, sx, t) {
 }
 
 const CLAIR = '#f3e6b4', FONCE = '#1b1233';           // les deux sortes de pixels : clair = il y a quelque chose, foncé = c'est vide
-function dessinerVuePixels(p, sx, alpha = 1, figee = false) {      // la convolution se voit pixel par pixel : des gros carrés clairs et foncés
+function dessinerVuePixels(p, sx, alpha = 1, figee = false) {
   const c = p.cell, lignes = p.type === 'buisson' ? p.rows - 2 : p.rows;     // buisson : les 2 dernières rangées sont sous terre
   const zs = p.zx - camX, zh = Math.min(p.zy1, H) - p.zy0;                   // la zone du piège : on ne dessine QUE là, pas sur tout l'écran
   ctx.save(); ctx.globalAlpha = alpha; ctx.beginPath(); ctx.rect(zs - 6, p.zy0 - 6, p.zl + 12, zh + 12); ctx.clip();
@@ -508,10 +515,9 @@ function dessinerGrilleP(p, sx, zs) {                    // les lunettes montren
 function dessinerPieges(t) {
   pieges.forEach(p => {
     const sx = p.x - camX, zs = p.zx - camX;
-    if (sx > W + 20 || sx + p.l < -20) return;          // hors écran : on ne dessine pas
+    if (sx > W + 20 || sx + p.l < -20) return;
     const a = p.visible || p.etat === 'resolu' ? 1 : (p.etat === 'actif' ? lunettesAlpha : 1);   // camouflé sans lunettes (sauf le buisson, et sauf une fois résolu)
     if (a > 0.01) { ctx.save(); ctx.globalAlpha = a; ({ sable: dessinerSable, trou: dessinerTrou, buisson: dessinerBuisson, tornade: dessinerTornade, mur: dessinerMur, brouillard: dessinerBrouillard })[p.type](p, sx, t); ctx.restore(); }
-    dessinerPanneauMatrices(p);                         // la vue Entrée → Filtre → Résultat (matrices.js)
     if (p.vueFin && p.type !== 'sable' && p.etat !== 'anim' && performance.now() - p.vueFin < 1100) dessinerVuePixels(p, sx, 1 - (performance.now() - p.vueFin) / 1100, true);
     if (p.etat === 'actif') {
       ctx.save();
@@ -534,12 +540,14 @@ function dessinerPieges(t) {
       }
     }
     if (p.etat === 'anim') {                            // la fenêtre magique qui balaie la grille
-      const a2 = p.anim, k = Math.min(a2.k, p.cols * p.rows - 1), n = a2.n, c = Math.floor(k / p.rows), r = k % p.rows;
+      const a2 = p.anim, k = Math.min(a2.k, p.cols * p.rows - 1), n = a2.n, c = a2.manuel ? a2.pos : Math.floor(k / p.rows), r = a2.manuel ? rangeeCle(p, a2.ph) : k % p.rows;
       const opA = p.phases[a2.ph].op, nn = tailleDe(opA, n), gx = sx + (c - (nn - 1) / 2) * p.cell, gy = p.y0 + (r - (nn - 1) / 2) * p.cell;
-      ctx.save(); ctx.beginPath(); ctx.rect(p.zx - camX, p.zy0, p.zl, Math.min(p.zy1, H) - p.zy0); ctx.clip();      // la carte n'apparaît que SUR le piège (sa zone), pas sur tout l'écran
-      dessinerMatrice(gx, gy, nn, p.cell, opA, 1);       // la carte qui passe : n×n cases colorées (clair = 1, foncé = 0 pour les pixels, aucun chiffre)
+      ctx.save(); ctx.beginPath();
+      if (a2.manuel) ctx.rect(sx, p.y0, p.l, H - p.y0); else ctx.rect(p.zx - camX, p.zy0, p.zl, Math.min(p.zy1, H) - p.zy0); ctx.clip();      // la carte n'apparaît que SUR le piège (sa zone), pas sur tout l'écran
+      if (!a2.manuel) dessinerMatrice(gx, gy, nn, p.cell, opA, 1);       // (atelier : c'est atelier.js qui dessine la carte)
       ctx.restore();
       const op = p.phases[a2.ph].op;
+      if (a2.manuel) { dessinerEclatsAtelier(p, sx); const txt = texteAtelier(p); if (txt) pilule(txt, Math.min(zs + p.zl / 2, W * 0.4), Math.min(SOL_Y - 80, p.zy0 - 30)); return; }   // atelier : les voisines volent vers le centre, par-dessus la carte
       pilule(({ moyenne: 'La Brume passe sur chaque pixel', gauss: 'La Berceuse calme chaque pixel', nettete: 'Le Lynx fait ressortir chaque pixel' })[op] ? ({ moyenne: 'La Brume passe sur chaque pixel', gauss: 'La Berceuse calme chaque pixel', nettete: 'Le Lynx fait ressortir chaque pixel' })[op] + ' · E : accélérer' : p.phases.length > 1 && op === 'laplace3' ? `Étape 2 sur 2 : on cherche les contours · E : accélérer` : p.outil === 'contours' ? `Étape 1 sur 2 : on calme le bruit · E : accélérer` : `Étape ${a2.ph + 1} sur ${p.phases.length} : ${op === 'maximum' ? 'on grossit' : 'on rétrécit'} · E : accélérer`, zs + p.zl / 2, Math.min(SOL_Y - 80, p.zy0 - 30));
     }
   });

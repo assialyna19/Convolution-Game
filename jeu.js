@@ -6,9 +6,9 @@
 const canvas = document.getElementById('jeu');
 const ctx = canvas.getContext('2d');
 let W = canvas.width;                    // largeur du jeu : change selon la fenêtre (voir redimensionner)
-const H = canvas.height;                 // hauteur du jeu : toujours 540
+const H = canvas.height;
 const P = 1920;                          // largeur maximale du jeu = largeur d'une "tuile" de décor
-const SOL_Y = 450;                       // hauteur du sol (le personnage marchera dessus)
+const SOL_Y = 450;
 const TAU = Math.PI * 2;
 const reduireMouvement = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -20,7 +20,7 @@ function nouveauCanvas(w, h) { const c = document.createElement('canvas'); c.wid
    On garde la hauteur de jeu (540) et on adapte la LARGEUR au format de la fenêtre.
    Fenêtre très étroite (téléphone en portrait) : on garde 640 de large minimum, avec des bandes en haut/bas. */
 const cadre = document.getElementById('cadre');
-const ECRAN_MAX = 1120;                                // largeur maximale de l'écran de jeu en pixels
+const ECRAN_MAX = 1120;
 const COLONNE = 156;                                   // colonnes de cartes (mode normal)
 const COLONNE_COMPACT = 112;                           // colonnes de cartes (paysage sur petit écran)
 const RESERVE_PORTRAIT = 238;                          // hauteur réservée sous le jeu en portrait : tailles + filtres + message
@@ -71,9 +71,9 @@ const lucioles = Array.from({ length: 36 }, () => ({
 /* =====================================================
    ÉTAPE 3 : LE HÉROS (avance, saute, la caméra le suit)
    ===================================================== */
-let camX = 0;                                   // décalage du monde, maintenant piloté par le héros
+let camX = 0;
 // Le héros reste à 30 % de la largeur de l'écran (W * 0.3)
-const GRAVITE = 1900, VIT_MAX = 330, SAUT = -720;   // réglages : gravité, vitesse de marche, force du saut
+const GRAVITE = 1900, VIT_MAX = 330, SAUT = -720;
 // Le héros vit dans le MONDE (x = distance parcourue). Son x à l'écran = x - camX.
 const heros = { x: 120, y: SOL_Y, vx: 0, vy: 0, auSol: true, sens: 1, marche: 0, enfonce: 0, ralenti: 1, tombe: false };   // enfonce = profondeur dans le sable, ralenti = coefficient de vitesse
 
@@ -116,7 +116,7 @@ function dessinerHerosBrut() {
     const fw = imgHeros.width / SPRITE.images, fh = imgHeros.height;     // taille d'UNE pose
     const hh = SPRITE.hauteur, ww = hh * fw / fh;                        // on garde les proportions
     const marche = heros.auSol && Math.abs(heros.vx) > 10;
-    const pose = SPRITE.images > 1 && marche ? Math.floor(heros.marche / 1.5) % SPRITE.images : 0;   // enchaîne les poses en marchant
+    const pose = SPRITE.images > 1 && marche ? Math.floor(heros.marche / 1.5) % SPRITE.images : 0;
     const rebond = SPRITE.images === 1 && marche ? -Math.abs(Math.sin(heros.marche)) * 5 : 0;       // image fixe : petit rebond
     ctx.save(); ctx.translate(sx, heros.y + 10 + heros.enfonce + rebond);
     ctx.scale(heros.sens * (SPRITE.regardeADroite ? 1 : -1), 1);
@@ -180,7 +180,7 @@ document.querySelectorAll('.outil').forEach(b => {
 });
 function choisirOutil(nom) {
   if (nom === 'vapeur' && !HUMAINS_ACTIFS) return;
-  if (typeof filtreDisponible === 'function' && !filtreDisponible(nom)) return;                 // ce filtre n'existe pas encore dans ce niveau                  // pas d'humains pour l'instant : la vapeur est inutile              // re-cliquer sur l'outil actif le range
+  if (typeof filtreDisponible === 'function' && !filtreDisponible(nom)) return;                 // ce filtre n'existe pas encore dans ce niveau
   outilActif = outilActif === nom ? null : nom; majOutils(); Son.jouer('carte');
 }
 function basculerLunettes() {
@@ -196,7 +196,7 @@ addEventListener('keydown', e => {        // raccourcis : L = lunettes, 1 à 4 =
   if (e.repeat) return;
   const k = e.key.toLowerCase();
   if (k === 'l') basculerLunettes();
-  if (k === 'f') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();   // vrai plein écran
+  if (k === 'f') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
   const i = '1234567'.indexOf(k);
   if (k.length === 1 && i >= 0) choisirOutil(['flou', 'ouverture', 'fermeture', 'gaussien', 'nettete', 'contours', 'vapeur'][i]);
 });
@@ -207,7 +207,7 @@ function majCoeurs() { elCoeurs.textContent = niveauActuel.entrainement ? '∞' 
 function perdreVie() {
   if (niveauActuel.entrainement) { Son.jouer('echec'); montrerBulle("Raté… mais c'est l'entraînement : tu ne perds pas de vie !"); return; }     // à l'entraînement, on ne perd jamais de vie
   vies = Math.max(0, vies - 1); majCoeurs(); Son.jouer('degat');
-}   // les pièges l'appelleront à l'étape 6 (testable dans la console F12)
+}
 function progression() { return Math.min(1, Math.max(0, (heros.x - 120) / (LONGUEUR_NIVEAU - 120))); }   // 0 = départ, 1 = château
 function majHUD(dt) {
   temps += dt;
@@ -215,7 +215,7 @@ function majHUD(dt) {
   if (s !== derniereSeconde) { derniereSeconde = s; elChrono.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   const p = progression() * 100;
   elTrace.style.width = p + '%'; elMarqueur.style.left = p + '%';
-  lunettesAlpha += ((lunettes ? 1 : 0) - lunettesAlpha) * Math.min(1, dt * 8);   // fondu en douceur
+  lunettesAlpha += ((lunettes ? 1 : 0) - lunettesAlpha) * Math.min(1, dt * 8);
 }
 majCoeurs(); majOutils();
 
@@ -225,7 +225,7 @@ function dessinerCouche(img, vitesse, y = 0) {
   ctx.drawImage(img, x, y); ctx.drawImage(img, x + P, y);
 }
 
-function dessinerNuage(n) {                        // nuage doux : plusieurs bouffées dégradées, éclairées par la lune
+function dessinerNuage(n) {
   [[0, 0, 60], [50, -12, 48], [100, 2, 56], [48, 10, 50]].forEach(([dx, dy, r]) => {
     const x = n.px + dx * n.s, y = n.y + dy * n.s, rr = r * n.s, g = ctx.createRadialGradient(x - rr * 0.2, y - rr * 0.3, 0, x, y, rr);
     g.addColorStop(0, 'rgba(150,160,205,0.38)'); g.addColorStop(1, 'rgba(90,100,150,0)');
@@ -246,33 +246,33 @@ function animerAmbiance(dt) {                      // nuages et lucioles continu
 }
 
 function update(dt) {
-  if (confirmOuvert || aideOuvert) { animerAmbiance(dt); return; }   // la boîte « Quitter ? » ou l'aide est ouverte : pause
-  if (introOuvert) { animerAmbiance(dt); majIntro(dt); return; }   // l'histoire d'introduction : pause aussi
+  if (confirmOuvert || aideOuvert || (typeof quizOuvert !== 'undefined' && quizOuvert)) { animerAmbiance(dt); return; }   // la boîte « Quitter ? », l'aide ou le défi avant un piège (quiz.js) : pause
+  if (introOuvert) { animerAmbiance(dt); majIntro(dt); return; }
   if (accueilOuvert) { animerAmbiance(dt); return; }   // accueil ouvert : pause aussi, mais le décor vit derrière
-  if (ecranOuvert) return;                      // écran de fin de niveau : pause aussi
+  if (ecranOuvert) return;
   heros.accroupi = heros.auSol && heros.enfonce === 0 && (veut('bas') || heros.forceBas); heros.forceBas = false;   // accroupi (↓ / S), ou forcé sous un buisson
   let dir = (veut('droite') ? 1 : 0) - (veut('gauche') ? 1 : 0);            // -1, 0 ou +1
   if (heros.auto) {                                                         // « E » : le chevalier avance tout seul dans le passage, sans les flèches
     dir = performance.now() >= heros.auto.apres ? 1 : 0;
     if (heros.x >= heros.auto.cible) heros.auto = null;
   } else if (animationEnCours()) dir = 0;                                   // pendant que le filtre glisse, il attend
-  if (porte.etat === 'entree') dir = 0;                                     // devant la porte, il ne bouge plus
-  heros.vx += (dir * VIT_MAX * heros.ralenti * (heros.accroupi ? 0.5 : 1) - heros.vx) * Math.min(1, dt * (heros.auSol ? 10 : 4));   // accélère/freine en douceur
+  if (porte.etat === 'entree') dir = 0;
+  heros.vx += (dir * VIT_MAX * heros.ralenti * (heros.accroupi ? 0.5 : 1) - heros.vx) * Math.min(1, dt * (heros.auSol ? 10 : 4));
   if (dir) heros.sens = dir;
-  if (veut('saut') && heros.auSol && heros.enfonce === 0 && !heros.accroupi && !heros.auto && !animationEnCours() && !niveauActuel.entrainement && porte.etat === 'fermee' && !sautInterdit()) { heros.vy = SAUT; heros.auSol = false; Son.jouer('saut'); }           // saut : seulement depuis le sol
-  heros.vy += GRAVITE * dt;                                                           // la gravité tire toujours vers le bas
+  if (veut('saut') && heros.auSol && heros.enfonce === 0 && !heros.accroupi && !heros.auto && !animationEnCours() && !niveauActuel.entrainement && porte.etat === 'fermee' && !sautInterdit()) { heros.vy = SAUT; heros.auSol = false; Son.jouer('saut'); }
+  heros.vy += GRAVITE * dt;
   const xAvant = heros.x, yAvant = heros.y;
   heros.x = Math.min(LONGUEUR_NIVEAU, Math.max(40, heros.x + heros.vx * dt));
-  pousserParRochers(xAvant);                            // les rochers sont des murs : il faut sauter par-dessus
+  pousserParRochers(xAvant);
   heros.y += heros.vy * dt;
-  const appui = heros.tombe ? null : supportSous(yAvant);   // une plateforme ou un rocher sous les pieds ?
+  const appui = heros.tombe ? null : supportSous(yAvant);
   if (appui !== null) { heros.y = appui; heros.vy = 0; heros.auSol = true; }
   else if (heros.y >= SOL_Y && !heros.tombe) {              // le sol ou... un trou ouvert (surTrou : voir pieges.js)
     if (surTrou()) { heros.tombe = true; heros.auSol = false; Son.jouer('chute'); }
     else { heros.y = SOL_Y; heros.vy = 0; heros.auSol = true; }
-  }        // atterrissage
-  heros.marche += Math.abs(heros.vx) * dt * 0.05;                                      // fait avancer l'animation de marche
-  camX += (Math.max(0, heros.x - W * 0.3) - camX) * Math.min(1, dt * 8);              // la caméra suit en douceur
+  }
+  heros.marche += Math.abs(heros.vx) * dt * 0.05;
+  camX += ((typeof cibleCamera === 'function' ? cibleCamera() : Math.max(0, heros.x - W * 0.3)) - camX) * Math.min(1, dt * 8);   // la caméra suit en douceur (atelier.js la décale pendant un filtre)
   majPieges(dt);
   majMonde(dt);
   majHumains(dt);
@@ -293,20 +293,20 @@ function draw(t) {
   }
   if (decor.nuages) nuages.forEach(n => { n.px = ((n.x - camX * 0.04) % (W + 260) + W + 260) % (W + 260) - 130; dessinerNuage(n); });
   decor.couches.forEach(c => dessinerCouche(c.img, c.v));
-  dessinerFeux(t);                                   // flammes des braseros et des bougies
-  const bc = decor.brume.join(','), brume = ctx.createLinearGradient(0, SOL_Y - 110, 0, SOL_Y);   // brume au pied du décor
+  dessinerFeux(t);
+  const bc = decor.brume.join(','), brume = ctx.createLinearGradient(0, SOL_Y - 110, 0, SOL_Y);
   brume.addColorStop(0, `rgba(${bc},0)`); brume.addColorStop(1, `rgba(${bc},0.22)`);
   ctx.fillStyle = brume; ctx.fillRect(0, SOL_Y - 110, W, 110);
   if (decor.rayons) rayonsDeSoleil(t);
   dessinerCouche(decor.sol, 1);
-  dessinerPortail(t);                                // le portail de sortie du niveau
-  dessinerMonde(t);                                  // plateformes, rochers, trésors cachés et pièces
+  dessinerPortail(t);
+  dessinerMonde(t);
   dessinerPieges(t);
   dessinerHumains(t);
   if (porte.etat === 'entree') { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - porte.t / 1.2); dessinerHeros(); ctx.restore(); }   // il s'efface dans la lumière...
   else dessinerHeros();
   dessinerDisparition(t);                            // ...en laissant une colonne de lumière et des étincelles
-  dessinerIntroScene(t);                             // la princesse de l'histoire
+  dessinerIntroScene(t);
   dessinerVapeur(t);
   dessinerCouche(decor.avant, 1.3);                 // herbes du premier plan, devant le héros
   // lucioles : petits points lumineux qui clignotent

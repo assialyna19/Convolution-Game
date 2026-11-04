@@ -5,7 +5,7 @@
    Derrière le texte, le jeu montre le prince, la princesse, puis le sortilège qui l'emporte.
    ===================================================== */
 let introOuvert = false, introSlide = 0, introT = 0, introVue = false;
-try { introVue = localStorage.getItem('quete-intro-vue') === '1'; } catch (e) { /* tant pis */ }
+try { introVue = localStorage.getItem('quete-intro-vue') === '1'; } catch (e) {}
 
 const SLIDES = [
   { titre: 'Il était une fois…', texte: "Dans un royaume paisible vivaient un prince courageux et une princesse au grand cœur. Tout le monde était heureux." },
@@ -36,12 +36,12 @@ function majSlide() {
 }
 function finIntro() {
   introOuvert = false; elIntro.classList.remove('ouvert'); introVue = true;
-  try { localStorage.setItem('quete-intro-vue', '1'); } catch (e) { /* tant pis */ }
+  try { localStorage.setItem('quete-intro-vue', '1'); } catch (e) {}
   if (jeuEnCours) ouvrirAccueil(); else demarrer(0);
 }
-function quitterIntro() {                                  // la petite croix : on ferme l'histoire et on revient à l'accueil
+function quitterIntro() {
   introOuvert = false; elIntro.classList.remove('ouvert'); introVue = true;
-  try { localStorage.setItem('quete-intro-vue', '1'); } catch (e) { /* tant pis */ }
+  try { localStorage.setItem('quete-intro-vue', '1'); } catch (e) {}
   ouvrirAccueil();
 }
 function suivantIntro() { if (introSlide < SLIDES.length - 1) { introSlide++; introT = 0; majSlide(); } else finIntro(); }
